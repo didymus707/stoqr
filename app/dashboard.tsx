@@ -6,14 +6,22 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Colors, FontSize, Spacing, BorderRadius } from "../constants/theme";
+import { useAuth } from "@/stores/auth";
+import { Redirect, useRouter } from "expo-router";
 
 export default function DashboardScreen() {
+  const { session } = useAuth();
+
   const getGreeting = (): string => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
     if (hour < 18) return "Good afternoon";
     return "Good Evening";
   };
+
+  if (!session) {
+    return <Redirect href="/" />;
+  }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
