@@ -1,9 +1,32 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { useEffect } from "react";
+import { useAuth } from "@/stores/auth";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { Colors, FontSize, Spacing, BorderRadius } from "../constants/theme";
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { session, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && session) {
+      router.replace("/dashboard");
+    }
+  }, [session, loading, router]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -24,12 +47,15 @@ export default function WelcomeScreen() {
       <View style={styles.actions}>
         <TouchableOpacity
           style={styles.primaryButton}
-          onPress={() => router.push("/dashboard")}
+          onPress={() => router.push("/sign-up")}
         >
           <Text style={styles.primaryButtonText}>Get Started</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.secondaryButton}>
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={() => router.push("/sign-in")}
+        >
           <Text style={styles.secondaryButtonText}>
             I already have an account
           </Text>
@@ -49,6 +75,12 @@ function FeatureRow({ emoji, text }: { emoji: string; text: string }) {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.background,
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.background,
