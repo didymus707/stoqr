@@ -16,7 +16,7 @@ export default function WelcomeScreen() {
 
   useEffect(() => {
     if (!loading && session) {
-      router.replace("/dashboard");
+      router.replace("/(tabs)");
     }
   }, [session, loading, router]);
 

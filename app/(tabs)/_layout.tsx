@@ -1,0 +1,69 @@
+import { Tabs } from "expo-router";
+import { Colors } from "../../constants/theme";
+import { Text, useWindowDimensions } from "react-native";
+
+export default function TabLayout() {
+  const { width } = useWindowDimensions();
+  const isSmallScreen = width < 700;
+
+  return (
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.text.muted,
+        tabBarStyle: {
+          backgroundColor: Colors.background,
+          borderTopColor: Colors.border,
+          borderTopWidth: 0.5,
+          paddingBottom: 0,
+          paddingTop: isSmallScreen ? 4 : 8,
+          height: isSmallScreen ? 55 : 65,
+        },
+        tabBarLabelStyle: {
+          fontSize: isSmallScreen ? 10 : 12,
+          marginBottom: isSmallScreen ? 4 : 6,
+        },
+        tabBarIconStyle: {
+          marginTop: isSmallScreen ? 4 : 6,
+        },
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Home",
+          tabBarIcon: ({ color }) => <TabIcon emoji="🏠" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="inventory"
+        options={{
+          title: "Inventory",
+          tabBarIcon: ({ color }) => <TabIcon emoji="📦" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="scan"
+        options={{
+          title: "Scan",
+          tabBarIcon: ({ color }) => <TabIcon emoji="📸" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="compare"
+        options={{
+          title: "Compare",
+          tabBarIcon: ({ color }) => <TabIcon emoji="💰" color={color} />,
+        }}
+      />
+    </Tabs>
+  );
+}
+
+function TabIcon({ emoji, color }: { emoji: string; color: string }) {
+  const { width } = useWindowDimensions();
+  return (
+    <Text style={{ fontSize: width < 700 ? 16 : 20, color }}>{emoji}</Text>
+  );
+}
