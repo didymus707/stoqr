@@ -36,3 +36,20 @@
 
 ### Current branch
 - feature/navigation-and-real-data (in progress, not merged yet)
+
+## Product Backlog
+
+### Shopping List
+- Auto-populate from low stock alerts
+- Manual add extra items
+- Tick off items at the shop
+- Auto-restock ticked items
+
+### Consumption Tracking
+- Estimated depletion engine (set usage rate per item)
+- Quick status update UI — Full / Half / Low / Empty
+- Receipt scanning (Phase 2)
+
+### Post-Purchase Reconciliation
+- After shopping, check missed items
+- Alert user about unpurchased low stock items
