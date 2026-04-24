@@ -53,3 +53,29 @@
 ### Post-Purchase Reconciliation
 - After shopping, check missed items
 - Alert user about unpurchased low stock items
+
+## Session 4 — Apr 23, 2026
+### Completed
+- Bottom tab navigation (Home, Inventory, Scan, Compare)
+- Responsive tab bar using useWindowDimensions
+- SafeAreaProvider setup
+- useInventory custom hook with real Supabase queries
+- Dashboard connected to real data
+- Skeleton loading screen
+- Empty state when no items
+- signOut added to AuthProvider
+- Action sheet on avatar tap
+
+### In Progress
+- Sign out redirect broken — route ambiguity between
+  app/index.tsx and app/(tabs)/index.tsx
+- Fix: rename app/index.tsx to app/welcome.tsx
+  and update all route references
+
+### Next session
+- Fix sign out redirect
+- Build add item screen
+- Test full flow — add item → appears on dashboard
+
+### Current branch
+- feature/navigation-and-real-data (not merged yet)
