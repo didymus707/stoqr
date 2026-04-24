@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-import { useAuth } from "@/stores/auth";
 import {
   View,
   Text,
@@ -7,6 +5,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
+import { useEffect } from "react";
+import { useAuth } from "@/stores/auth";
 import { useRouter } from "expo-router";
 import { Colors, FontSize, Spacing, BorderRadius } from "../constants/theme";
 
