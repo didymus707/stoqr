@@ -5,9 +5,8 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
-import { useEffect } from "react";
 import { Item } from "@/types/database";
-import { useRouter, Redirect } from "expo-router";
+import { useRouter } from "expo-router";
 import { useAuth } from "@/stores/auth";
 import { useInventory } from "@/hooks/useInventory";
 import { useActionSheet } from "@expo/react-native-action-sheet";
