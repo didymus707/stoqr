@@ -41,11 +41,11 @@ export default function TabLayout() {
           height: isSmallScreen ? 90 : 65,
         },
         tabBarLabelStyle: {
-          fontSize: isSmallScreen ? 10 : 12,
-          marginBottom: isSmallScreen ? 4 : 6,
+          fontSize: isSmallScreen ? 14 : 16,
+          marginBottom: isSmallScreen ? 6 : 8,
         },
         tabBarIconStyle: {
-          marginTop: isSmallScreen ? 4 : 6,
+          marginTop: isSmallScreen ? 4 : 8,
         },
       }}
     >
@@ -84,6 +84,6 @@ export default function TabLayout() {
 function TabIcon({ emoji, color }: { emoji: string; color: string }) {
   const { width } = useWindowDimensions();
   return (
-    <Text style={{ fontSize: width < 700 ? 16 : 20, color }}>{emoji}</Text>
+    <Text style={{ fontSize: width < 700 ? 18 : 20, color }}>{emoji}</Text>
   );
 }
