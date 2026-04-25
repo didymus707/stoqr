@@ -1,10 +1,30 @@
-import { Tabs } from "expo-router";
+import { useAuth } from "@/stores/auth";
+import { Tabs, Redirect } from "expo-router";
 import { Colors } from "../../constants/theme";
-import { Text, useWindowDimensions } from "react-native";
+import {
+  Text,
+  View,
+  ActivityIndicator,
+  useWindowDimensions,
+} from "react-native";
 
 export default function TabLayout() {
+  const { session, loading } = useAuth();
   const { width } = useWindowDimensions();
+
   const isSmallScreen = width < 700;
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  if (!session) {
+    return <Redirect href="/sign-in" />;
+  }
 
   return (
     <Tabs
@@ -18,7 +38,7 @@ export default function TabLayout() {
           borderTopWidth: 0.5,
           paddingBottom: 0,
           paddingTop: isSmallScreen ? 4 : 8,
-          height: isSmallScreen ? 55 : 65,
+          height: isSmallScreen ? 90 : 65,
         },
         tabBarLabelStyle: {
           fontSize: isSmallScreen ? 10 : 12,

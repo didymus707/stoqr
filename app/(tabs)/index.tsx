@@ -22,12 +22,6 @@ export default function HomeScreen() {
   const fullName = session?.user?.user_metadata?.full_name ?? "there";
   const firstName = fullName.split(" ")[0];
 
-  useEffect(() => {
-    if (!session) {
-      router.replace("../index" as any);
-    }
-  }, [session]);
-
   const getGreeting = (): string => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good morning";
