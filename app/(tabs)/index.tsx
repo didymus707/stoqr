@@ -9,6 +9,10 @@ import { Item } from "@/types/database";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/stores/auth";
 import { useInventory } from "@/hooks/useInventory";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
 
@@ -17,6 +21,7 @@ export default function HomeScreen() {
   const { session, signOut } = useAuth();
   const { showActionSheetWithOptions } = useActionSheet();
   const { items, stats, loading, error, refetch } = useInventory();
+  const insets = useSafeAreaInsets();
 
   const fullName = session?.user?.user_metadata?.full_name ?? "there";
   const firstName = fullName.split(" ")[0];
@@ -72,45 +77,58 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>{getGreeting()} 👋</Text>
-          <Text style={styles.name}>{firstName}</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>{getGreeting()} 👋</Text>
+            <Text style={styles.name}>{firstName}</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.headerAddButton}
+              onPress={() => router.push("/add-item")}
+            >
+              <Text style={styles.headerAddButtonText}>+</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.avatar} onPress={handleAvatarPress}>
+              <Text style={styles.avatarText}>
+                {firstName.charAt(0).toUpperCase()}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        <TouchableOpacity style={styles.avatar} onPress={handleAvatarPress}>
-          <Text style={styles.avatarText}>
-            {firstName.charAt(0).toUpperCase()}
-          </Text>
-        </TouchableOpacity>
-      </View>
 
-      <View style={styles.summaryRow}>
-        <SummaryCard label="Total Items" value={String(stats.total)} />
-        <SummaryCard label="Low Stock" value={String(stats.low)} alert />
-        <SummaryCard label="Out of Stock" value={String(stats.out)} danger />
-      </View>
-
-      <Text style={styles.sectionTitle}>Inventory</Text>
-
-      {items.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyEmoji}>📦</Text>
-          <Text style={styles.emptyTitle}>No items yet</Text>
-          <Text style={styles.emptySubtitle}>
-            Add your first item to start tracking your inventory
-          </Text>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => router.push("/(tabs)/inventory")}
-          >
-            <Text style={styles.addButtonText}>Add your first item</Text>
-          </TouchableOpacity>
+        <View style={styles.summaryRow}>
+          <SummaryCard label="Total Items" value={String(stats.total)} />
+          <SummaryCard label="Low Stock" value={String(stats.low)} alert />
+          <SummaryCard label="Out of Stock" value={String(stats.out)} danger />
         </View>
-      ) : (
-        items.map((item) => <InventoryItem key={item.id} item={item} />)
-      )}
-    </ScrollView>
+
+        <Text style={styles.sectionTitle}>Inventory</Text>
+
+        {items.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyEmoji}>📦</Text>
+            <Text style={styles.emptyTitle}>No items yet</Text>
+            <Text style={styles.emptySubtitle}>
+              Add your first item to start tracking your inventory
+            </Text>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => router.push("/(tabs)/inventory")}
+            >
+              <Text style={styles.addButtonText}>Add your first item</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          items.map((item) => <InventoryItem key={item.id} item={item} />)
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -219,6 +237,7 @@ const styles = StyleSheet.create({
   content: {
     padding: Spacing.lg,
     paddingBottom: Spacing.xxl,
+    flexGrow: 1,
   },
   centeredContainer: {
     flex: 1,
@@ -233,8 +252,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   greeting: {
-    fontSize: FontSize.sm,
+    fontSize: FontSize.md,
     color: Colors.text.secondary,
+    marginBottom: 2
   },
   name: {
     fontSize: FontSize.xl,
@@ -353,7 +373,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
   },
   skeletonBlock: {
-    backgroundColor: Colors.border,
+    backgroundColor: "#E0E0E0",
     borderRadius: BorderRadius.md,
   },
   errorText: {
@@ -370,5 +390,25 @@ const styles = StyleSheet.create({
   retryText: {
     color: "#FFFFFF",
     fontWeight: "600",
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  headerAddButton: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerAddButtonText: {
+    fontSize: FontSize.xl,
+    color: Colors.primary,
+    fontWeight: "300",
   },
 });

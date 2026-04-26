@@ -1,7 +1,8 @@
-import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/stores/auth";
 import { Item } from "@/types/database";
-import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { useState, useEffect, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
 
 type InventoryStats = {
   total: number;
@@ -23,8 +24,8 @@ export const useInventory = (): UseInventoryReturn => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchItems = async () => {
-    if (!session) return;
+  const fetchItems = useCallback(async () => {
+    if (!session?.user) return;
 
     setLoading(true);
     setError(null);
@@ -59,11 +60,13 @@ export const useInventory = (): UseInventoryReturn => {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchItems();
   }, [session]);
+
+  const refetchOnFocus = useCallback(() => {
+    fetchItems();
+  }, [fetchItems]);
+
+  useFocusEffect(refetchOnFocus);
 
   const stats: InventoryStats = {
     total: items.length,
