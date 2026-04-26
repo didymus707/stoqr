@@ -1,27 +1,27 @@
 export const Colors = {
-  primary: "#2D9CDB",
+  primary: "#4F46E5",
   background: "#FFFFFF",
-  surface: "#F8F9FA",
-  border: "#E9ECEF",
+  surface: "#F9FAFB",
+  border: "#E5E7EB",
   text: {
-    primary: "#1A1A1A",
-    secondary: "#666666",
-    muted: "#999999",
+    primary: "#111827",
+    secondary: "#6B7280",
+    muted: "#9CA3AF",
   },
   status: {
-    success: "#27AE60",
-    warning: "#F2994A",
-    danger: "#EB5757",
+    success: "#059669",
+    warning: "#D97706",
+    danger: "#DC2626",
   },
 };
 
 export const FontSize = {
-  xs: 12,
-  sm: 14,
-  md: 16,
-  lg: 20,
-  xl: 24,
-  xxl: 32,
+  xs: 11,
+  sm: 13,
+  md: 15,
+  lg: 18,
+  xl: 22,
+  xxl: 28,
 };
 
 export const Spacing = {

@@ -49,7 +49,7 @@ export default function SignInScreen() {
 
   useEffect(() => {
     if (session) {
-      router.replace("/dashboard");
+      router.replace("/(tabs)");
     }
   }, [session]);
 
