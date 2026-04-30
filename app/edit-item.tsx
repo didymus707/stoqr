@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,15 +7,15 @@ import {
   TextInput,
   ScrollView,
   ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
+  
   Platform,
+  KeyboardAvoidingView
 } from "react-native";
-import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/stores/auth";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useInventory } from "@/hooks/useInventory";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const UNITS = [
   "pcs",
@@ -30,18 +30,20 @@ const UNITS = [
   "loaves",
 ];
 
-const AddItemScreen = () => {
+const EditItemScreen = () => {
   const router = useRouter();
-  const { session } = useAuth();
+  const { id } = useLocalSearchParams();
+  const { items } = useInventory();
+
+  const item = items.find((item) => item.id === id);
 
   const [name, setName] = useState("");
   const [unit, setUnit] = useState("pcs");
   const [store, setStore] = useState("");
   const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("1");
-  const [loading, setLoading] = useState(false);
   const [threshold, setThreshold] = useState("1");
-  const insets = useSafeAreaInsets();
+  const [loading, setLoading] = useState(false);
 
   const [errors, setErrors] = useState({
     name: "",
@@ -58,7 +60,7 @@ const AddItemScreen = () => {
     return "ok";
   };
 
-  const handleAddItem = async () => {
+  const handleEditItem = async () => {
     const newErrors = { name: "", quantity: "", form: "" };
 
     if (!name.trim()) {
@@ -76,48 +78,22 @@ const AddItemScreen = () => {
     setLoading(true);
 
     try {
-      // First get or create the user's default inventory
-      let { data: inventories, error: invError } = await supabase
-        .from("inventories")
-        .select("id")
-        .eq("user_id", session!.user.id)
-        .limit(1);
-
-      if (invError) throw invError;
-
-      let inventoryId: string;
-
-      if (!inventories || inventories.length === 0) {
-        // Create a default inventory for this user
-        const { data: newInv, error: createError } = await supabase
-          .from("inventories")
-          .insert({
-            user_id: session!.user.id,
-            name: "My Inventory",
-          })
-          .select("id")
-          .single();
-
-        if (createError) throw createError;
-        inventoryId = newInv.id;
-      } else {
-        inventoryId = inventories[0].id;
-      }
-
       const parsedThreshold = parseFloat(threshold) || 1;
       const parsedPrice = price ? parseFloat(price) : null;
       const status = calculateStatus(parsedQty, parsedThreshold);
 
-      const { error: itemError } = await supabase.from("items").insert({
-        inventory_id: inventoryId,
-        name: name.trim(),
-        quantity: parsedQty,
-        unit: unit,
-        low_stock_threshold: parsedThreshold,
-        status,
-        store: store.trim() || null,
-        price: parsedPrice,
-      });
+      const { error: itemError } = await supabase
+        .from("items")
+        .update({
+          name: name.trim(),
+          quantity: parsedQty,
+          unit: unit,
+          low_stock_threshold: parsedThreshold,
+          status,
+          store: store.trim() || null,
+          price: parsedPrice,
+        })
+        .eq("id", id);
 
       if (itemError) throw itemError;
 
@@ -129,13 +105,33 @@ const AddItemScreen = () => {
     }
   };
 
+  useEffect(() => {
+    if (item) {
+      setName(item.name);
+      setUnit(item.unit ?? "");
+      setStore(item.store ?? "");
+      setPrice(item.price != null ? item.price.toString() : "");
+      setQuantity(item.quantity.toString() ?? "");
+      setThreshold(item.low_stock_threshold.toString() ?? "");
+    }
+  }, [item]);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size={32} color={Colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
       <ScrollView
-        style={[styles.container, { paddingTop: insets.top }]}
+        style={styles.container}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
@@ -143,8 +139,8 @@ const AddItemScreen = () => {
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.cancelText}>Cancel</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>Add Item</Text>
-          <TouchableOpacity onPress={handleAddItem} disabled={loading}>
+          <Text style={styles.title}>Edit Item</Text>
+          <TouchableOpacity onPress={handleEditItem} disabled={loading}>
             {loading ? (
               <ActivityIndicator size={16} color={Colors.primary} />
             ) : (
@@ -272,6 +268,7 @@ const AddItemScreen = () => {
           <Text style={styles.errorText}>{errors.form}</Text>
         ) : null}
       </ScrollView>
+    </SafeAreaView>
     </KeyboardAvoidingView>
   );
 };
@@ -380,4 +377,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddItemScreen;
+export default EditItemScreen;
