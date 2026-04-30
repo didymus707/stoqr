@@ -79,3 +79,42 @@
 
 ### Current branch
 - feature/navigation-and-real-data (not merged yet)
+
+## Session 5 — Apr 26, 2026
+### Completed
+- Add item screen with full validation
+- Get-or-create user inventory pattern
+- Status auto-calculation from quantity vs threshold
+- Auto-refresh dashboard on focus via useFocusEffect
+- Action sheet for avatar (sign out, profile)
+- Sign out redirect fixed via tab layout guard
+- Theme redesign — clean indigo + purposeful status colours
+- SafeAreaView properly wrapping screens
+
+### Next session
+- Build inventory tab — full list with filters
+- Edit item screen
+- Delete item with confirmation
+- Profile screen with phone number
+
+### Current branch
+- feature/navigation-and-real-data (ready to merge)
+
+## Session 6 — Apr 30, 2026
+### Completed
+- Inventory tab with full item list
+- Search by name (client-side)
+- Filter by status — all, ok, low, out
+- Delete item with confirmation alert
+- Edit item screen with pre-filled form
+- KeyboardAvoidingView on add and edit forms
+- Item count footer in inventory list
+
+### Next session
+- Push notifications for low stock alerts
+- Profile screen
+- Price comparison tab (Trolley.co.uk API)
+- Shopping list feature
+
+### Current branch
+- feature/inventory-tab (ready to merge)
