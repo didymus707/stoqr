@@ -8,20 +8,43 @@ import {
   TextInput,
   Alert,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useInventory } from "@/hooks/useInventory";
-import { supabase } from "@/lib/supabase";
-import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
 import { Item } from "@/types/database";
+import { useRouter } from "expo-router";
+import { supabase } from "@/lib/supabase";
+import { useInventory } from "@/hooks/useInventory";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
+import { useActionSheet } from "@expo/react-native-action-sheet";
 
 type FilterStatus = "all" | "ok" | "low" | "out";
 
 export default function InventoryScreen() {
   const router = useRouter();
-  const { items, loading, refetch } = useInventory();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterStatus>("all");
+  const { items, loading, refetch, updateQuantity } = useInventory();
+  const { showActionSheetWithOptions } = useActionSheet();
+
+  const handleMoreOptions = (item: Item) => {
+    showActionSheetWithOptions(
+      {
+        options: ["Edit", "Delete", "Cancel"],
+        destructiveButtonIndex: 1,
+        cancelButtonIndex: 2,
+        title: item.name,
+      },
+      (selectedIndex) => {
+        switch (selectedIndex) {
+          case 0:
+            router.push(`/edit-item?id=${item.id}`);
+            break;
+          case 1:
+            handleDelete(item);
+            break;
+        }
+      },
+    );
+  };
 
   const filtered = items
     .filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
@@ -125,7 +148,8 @@ export default function InventoryScreen() {
               key={item.id}
               item={item}
               onEdit={() => router.push(`/edit-item?id=${item.id}`)}
-              onDelete={() => handleDelete(item)}
+              onMoreOptions={() => handleMoreOptions(item)}
+              onUpdateQuantity={(newQty) => updateQuantity(item.id, newQty)}
             />
           ))}
           <Text style={styles.itemCount}>
@@ -137,15 +161,17 @@ export default function InventoryScreen() {
   );
 }
 
-function InventoryItemRow({
+const InventoryItemRow = ({
   item,
+  onUpdateQuantity,
+  onMoreOptions,
   onEdit,
-  onDelete,
 }: {
   item: Item;
+  onUpdateQuantity: (newQty: number) => void;
+  onMoreOptions: () => void;
   onEdit: () => void;
-  onDelete: () => void;
-}) {
+}) => {
   const statusColor =
     item.status === "out"
       ? Colors.status.danger
@@ -153,42 +179,54 @@ function InventoryItemRow({
         ? Colors.status.warning
         : Colors.status.success;
 
-  const statusLabel =
-    item.status === "out" ? "Out" : item.status === "low" ? "Low" : "OK";
+  const handleDecrement = () => {
+    if (item.quantity <= 0) return;
+    onUpdateQuantity(item.quantity - 1);
+  };
+
+  const handleIncrement = () => {
+    onUpdateQuantity(item.quantity + 1);
+  };
 
   return (
     <View style={styles.itemRow}>
       <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-      <View style={styles.itemInfo}>
+
+      <TouchableOpacity style={styles.itemInfo} onLongPress={onEdit}>
         <Text style={styles.itemName}>{item.name}</Text>
         <Text style={styles.itemMeta}>
-          {item.quantity} {item.unit ?? ""}
+          {item.quantity}
+          {item.unit ? ` ${item.unit}` : ""}
           {item.store ? ` · ${item.store}` : ""}
           {item.price ? ` · £${item.price.toFixed(2)}` : ""}
         </Text>
-      </View>
-      <View style={styles.itemActions}>
-        <View
-          style={[styles.statusPill, { backgroundColor: statusColor + "15" }]}
+      </TouchableOpacity>
+
+      <View style={styles.qtyGroup}>
+        <TouchableOpacity
+          style={[
+            styles.qtyButton,
+            item.quantity <= 0 && styles.qtyButtonDisabled,
+          ]}
+          onPress={handleDecrement}
+          disabled={item.quantity <= 0}
         >
-          <Text style={[styles.statusPillText, { color: statusColor }]}>
-            {statusLabel}
-          </Text>
-        </View>
-        <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
-          <Text style={styles.actionButtonText}>Edit</Text>
+          <Text style={styles.qtyButtonText}>−</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={onDelete}>
-          <Text
-            style={[styles.actionButtonText, { color: Colors.status.danger }]}
-          >
-            Delete
-          </Text>
+
+        <Text style={styles.qtyValue}>{item.quantity}</Text>
+
+        <TouchableOpacity style={styles.qtyButton} onPress={handleIncrement}>
+          <Text style={styles.qtyButtonText}>+</Text>
         </TouchableOpacity>
       </View>
+
+      <TouchableOpacity style={styles.moreButton} onPress={onMoreOptions}>
+        <Text style={styles.moreButtonText}>⋯</Text>
+      </TouchableOpacity>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -343,5 +381,65 @@ const styles = StyleSheet.create({
     color: Colors.text.muted,
     textAlign: "center",
     paddingTop: Spacing.md,
+  },
+  quantityControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  qtyGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+    gap: 4,
+  },
+  // qtyButton: {
+  //   width: 32,
+  //   height: 32,
+  //   borderRadius: BorderRadius.full,
+  //   backgroundColor: Colors.surface,
+  //   borderWidth: 1,
+  //   borderColor: Colors.border,
+  //   alignItems: "center",
+  //   justifyContent: "center",
+  // },
+  qtyButton: {
+    width: 24,
+    height: 24,
+    borderRadius: BorderRadius.full,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  qtyButtonDisabled: {
+    opacity: 0.3,
+  },
+  qtyButtonText: {
+    fontSize: FontSize.md,
+    color: Colors.text.primary,
+    fontWeight: "500",
+    lineHeight: 16,
+  },
+  qtyValue: {
+    fontSize: FontSize.sm,
+    color: Colors.text.primary,
+    fontWeight: "600",
+    minWidth: 20,
+    textAlign: "center",
+  },
+  moreButton: {
+    width: 28,
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  moreButtonText: {
+    fontSize: FontSize.md,
+    color: Colors.text.muted,
+    fontWeight: "600",
   },
 });
