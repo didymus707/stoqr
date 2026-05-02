@@ -95,6 +95,17 @@ export const useInventory = (): UseInventoryReturn => {
         ),
       );
 
+      // Send notification if status changed to low or out
+      if (status === "out" && item.status !== "out") {
+        await sendOutOfStockNotification(item.name);
+      } else if (status === "low" && item.status !== "low") {
+        await sendLowStockNotification(
+          item.name,
+          newQuantity,
+          item.unit ?? "units",
+        );
+      }
+
       const { error } = await supabase
         .from("items")
         .update({ quantity: newQuantity, status })
@@ -103,7 +114,7 @@ export const useInventory = (): UseInventoryReturn => {
       if (error) {
         fetchItems();
       }
-    },
+    };,
     [items, fetchItems],
   );
 

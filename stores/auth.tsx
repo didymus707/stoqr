@@ -7,6 +7,7 @@ import {
 } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { registerForPushNotifications } from "@/lib/notifications";
 
 type AuthContextType = {
   session: Session | null;
@@ -24,6 +25,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
+      if (session?.user) {
+        registerForPushNotifications(session.user.id);
+      }
     });
 
     const {
