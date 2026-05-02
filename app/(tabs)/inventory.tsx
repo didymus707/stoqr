@@ -18,6 +18,24 @@ import { useActionSheet } from "@expo/react-native-action-sheet";
 
 type FilterStatus = "all" | "ok" | "low" | "out";
 
+const getUnitLabel = (quantity: number, unit: string): string => {
+  if (quantity === 1) return unit;
+
+  const plurals: Record<string, string> = {
+    box: "boxes",
+    loaf: "loaves",
+    pc: "pcs",
+    litre: "litres",
+  };
+
+  // Metric abbreviations (kg, g, ml) don't typically change
+  const staysSingular = ["kg", "g", "ml"];
+
+  if (staysSingular.includes(unit)) return unit;
+
+  return plurals[unit] || `${unit}s`;
+};
+
 export default function InventoryScreen() {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -196,7 +214,7 @@ const InventoryItemRow = ({
         <Text style={styles.itemName}>{item.name}</Text>
         <Text style={styles.itemMeta}>
           {item.quantity}
-          {item.unit ? ` ${item.unit}` : ""}
+          {item.unit ? ` ${getUnitLabel(item.quantity, item.unit)}` : ""}
           {item.store ? ` · ${item.store}` : ""}
           {item.price ? ` · £${item.price.toFixed(2)}` : ""}
         </Text>
@@ -398,16 +416,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     gap: 4,
   },
-  // qtyButton: {
-  //   width: 32,
-  //   height: 32,
-  //   borderRadius: BorderRadius.full,
-  //   backgroundColor: Colors.surface,
-  //   borderWidth: 1,
-  //   borderColor: Colors.border,
-  //   alignItems: "center",
-  //   justifyContent: "center",
-  // },
   qtyButton: {
     width: 24,
     height: 24,

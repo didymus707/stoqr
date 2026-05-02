@@ -18,16 +18,16 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
 
 const UNITS = [
-  "pcs",
+  "pc",
   "kg",
   "g",
-  "litres",
+  "litre",
   "ml",
-  "cans",
-  "bottles",
-  "bags",
-  "boxes",
-  "loaves",
+  "can",
+  "bottle",
+  "bag",
+  "box",
+  "loaf",
 ];
 
 const AddItemScreen = () => {
