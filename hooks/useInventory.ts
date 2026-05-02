@@ -1,7 +1,7 @@
 import { useAuth } from "@/stores/auth";
 import { Item } from "@/types/database";
 import { supabase } from "@/lib/supabase";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useFocusEffect } from "expo-router";
 
 type InventoryStats = {
@@ -16,6 +16,7 @@ type UseInventoryReturn = {
   loading: boolean;
   error: string | null;
   refetch: () => void;
+  updateQuantity: (itemId: string, newQuantity: number) => Promise<void>;
 };
 
 export const useInventory = (): UseInventoryReturn => {
@@ -74,5 +75,37 @@ export const useInventory = (): UseInventoryReturn => {
     out: items.filter((i) => i.status === "out").length,
   };
 
-  return { items, stats, loading, error, refetch: fetchItems };
+  const updateQuantity = useCallback(
+    async (itemId: string, newQuantity: number) => {
+      const item = items.find((item) => item.id === itemId);
+      if (!item) return;
+
+      const status =
+        newQuantity <= 0
+          ? "out"
+          : newQuantity <= item.low_stock_threshold
+            ? "low"
+            : "ok";
+
+      setItems((prev) =>
+        prev.map((prevItem) =>
+          prevItem.id === itemId
+            ? { ...prevItem, quantity: newQuantity, status }
+            : prevItem,
+        ),
+      );
+
+      const { error } = await supabase
+        .from("items")
+        .update({ quantity: newQuantity, status })
+        .eq("id", itemId);
+
+      if (error) {
+        fetchItems();
+      }
+    },
+    [items, fetchItems],
+  );
+
+  return { items, stats, loading, error, refetch: fetchItems, updateQuantity };
 };
