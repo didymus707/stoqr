@@ -18,16 +18,16 @@ import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const UNITS = [
-  "pcs",
+  "pc",
   "kg",
   "g",
-  "litres",
+  "litre",
   "ml",
-  "cans",
-  "bottles",
-  "bags",
-  "boxes",
-  "loaves",
+  "can",
+  "bottle",
+  "bag",
+  "box",
+  "loaf",
 ];
 
 const EditItemScreen = () => {
