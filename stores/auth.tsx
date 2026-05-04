@@ -7,7 +7,7 @@ import {
 } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { registerForPushNotifications } from "@/lib/notifications";
+import { requestNotificationPermissions } from "@/lib/notifications";
 
 type AuthContextType = {
   session: Session | null;
@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setLoading(false);
       if (session?.user) {
-        registerForPushNotifications(session.user.id);
+        requestNotificationPermissions();
       }
     });
 
@@ -34,6 +34,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (_event === "SIGNED_IN") {
+        requestNotificationPermissions();
+      }
     });
 
     return () => subscription.unsubscribe();

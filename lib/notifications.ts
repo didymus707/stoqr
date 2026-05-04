@@ -6,7 +6,6 @@ import { supabase } from "./supabase";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
     shouldShowBanner: true,
@@ -14,10 +13,9 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export const registerForPushNotifications = async (userId: string) => {
+export const requestNotificationPermissions = async () => {
   if (!Device.isDevice) {
-    console.log("Push notifications require a real device");
-    return;
+    return false;
   }
 
   // check exisiting permisiions
@@ -30,16 +28,6 @@ export const registerForPushNotifications = async (userId: string) => {
     finalStatus = status;
   }
 
-  if (finalStatus !== "granted") {
-    console.log("Notification permission denied");
-    return;
-  }
-
-  const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-  const { data: token } = await Notifications.getExpoPushTokenAsync({
-    projectId,
-  });
-
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
       name: "StockSense Alerts",
@@ -48,12 +36,7 @@ export const registerForPushNotifications = async (userId: string) => {
     });
   }
 
-  await supabase
-    .from("profiles")
-    .update({ push_token: token })
-    .eq("id", userId);
-
-  return token;
+  return finalStatus === "granted";
 };
 
 export const sendLowStockNotification = async (
@@ -63,7 +46,7 @@ export const sendLowStockNotification = async (
 ) => {
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: "Low Stock Alert 📦",
+      title: "📦 Running Low",
       body: `${itemName} is running low — only ${quantity} ${unit} left`,
       data: { type: "low_stock" },
     },
@@ -71,15 +54,11 @@ export const sendLowStockNotification = async (
   });
 };
 
-export const sendOutOftockNotification = async (
-  itemName: string,
-  quantity: number,
-  unit: string,
-) => {
+export const sendOutOfStockNotification = async (itemName: string) => {
   await Notifications.scheduleNotificationAsync({
     content: {
       title: "Out of Stock ⚠️",
-      body: `You've run out of ${itemName}. Time to restock!`,
+      body: `You've run out of ${itemName}. Add it to your shopping list!`,
       data: { type: "out_of_stock" },
     },
     trigger: null,
