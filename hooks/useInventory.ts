@@ -3,6 +3,10 @@ import { Item } from "@/types/database";
 import { supabase } from "@/lib/supabase";
 import { useState, useCallback } from "react";
 import { useFocusEffect } from "expo-router";
+import {
+  sendLowStockNotification,
+  sendOutOfStockNotification,
+} from "@/lib/notifications";
 
 type InventoryStats = {
   total: number;
@@ -94,6 +98,16 @@ export const useInventory = (): UseInventoryReturn => {
             : prevItem,
         ),
       );
+
+      if (status === "out" && item.status !== "out") {
+        await sendOutOfStockNotification(item.name);
+      } else if (status === "low" && item.status !== "low") {
+        await sendLowStockNotification(
+          item.name,
+          newQuantity,
+          item.unit ?? "units",
+        );
+      }
 
       const { error } = await supabase
         .from("items")
