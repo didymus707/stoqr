@@ -149,7 +149,7 @@
 - Item count footer in inventory list
 - Push notifications for low stock alerts
 - Profile screen
-- Price comparison tab (Trolley.co.uk API)
+- Price comparison tab (crowdsourced from user inventory data)
 
 ### Next session
 - Shopping list feature
