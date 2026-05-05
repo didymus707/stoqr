@@ -69,6 +69,7 @@ npx expo start
 Press `w` for web, scan QR for iOS/Android via Expo Go.
 
 ## Project Structure
+
 stocksense/
 ├── app/                  # Screens (Expo Router file-based routing)
 │   ├── (tabs)/           # Tab navigator screens
