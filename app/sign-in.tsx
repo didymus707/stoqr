@@ -11,8 +11,9 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { supabase } from "../lib/supabase";
-import { Colors, FontSize, Spacing, BorderRadius } from "../constants/theme";
 import { useAuth } from "@/stores/auth";
+import { canGoBack } from "expo-router/build/global-state/routing";
+import { Colors, FontSize, Spacing, BorderRadius } from "../constants/theme";
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function SignInScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const canUserGoBack = canGoBack();
 
   async function handleSignIn() {
     if (!email || !password) {
@@ -55,7 +57,12 @@ export default function SignInScreen() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() =>
+          canUserGoBack ? router.back() : router.replace("/welcome")
+        }
+      >
         <Text style={styles.backText}>← Back</Text>
       </TouchableOpacity>
 
