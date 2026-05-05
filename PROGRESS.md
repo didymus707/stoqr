@@ -137,3 +137,24 @@
 - Android push notifications don't work in Expo Go (SDK 53+ limitation)
   Fix: Create a development build via EAS before launch
   Reference: https://docs.expo.dev/develop/development-builds/introduction/
+
+## Session 8 — May 5, 2026
+### Completed
+- Inventory tab with full item list
+- Search by name (client-side)
+- Filter by status — all, ok, low, out
+- Delete item with confirmation alert
+- Edit item screen with pre-filled form
+- KeyboardAvoidingView on add and edit forms
+- Item count footer in inventory list
+- Push notifications for low stock alerts
+- Profile screen
+- Price comparison tab (Trolley.co.uk API)
+
+### Next session
+- Shopping list feature
+
+## Known Technical Debt
+- Android push notifications don't work in Expo Go (SDK 53+ limitation)
+  Fix: Create a development build via EAS before launch
+  Reference: https://docs.expo.dev/develop/development-builds/introduction/

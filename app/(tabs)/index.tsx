@@ -34,7 +34,7 @@ export default function HomeScreen() {
   };
 
   const handleAvatarPress = () => {
-    const options = ["Proile & Settings", "Sign Out", "Cancel"];
+    const options = ["Profile & Settings", "Sign Out", "Cancel"];
     const destructiveButtonIndex = 1;
     const cancelButtonIndex = 2;
 
@@ -49,7 +49,7 @@ export default function HomeScreen() {
       (selectedIndex) => {
         switch (selectedIndex) {
           case 0:
-            router.push("/(tabs)/inventory");
+            router.push("/profile");
             break;
           case 1:
             signOut();
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: FontSize.md,
     color: Colors.text.secondary,
-    marginBottom: 2
+    marginBottom: 2,
   },
   name: {
     fontSize: FontSize.xl,
