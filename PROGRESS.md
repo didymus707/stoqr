@@ -140,21 +140,23 @@
 
 ## Session 8 — May 5, 2026
 ### Completed
-- Inventory tab with full item list
-- Search by name (client-side)
-- Filter by status — all, ok, low, out
-- Delete item with confirmation alert
-- Edit item screen with pre-filled form
-- KeyboardAvoidingView on add and edit forms
-- Item count footer in inventory list
-- Push notifications for low stock alerts
-- Profile screen
-- Price comparison tab (crowdsourced from user inventory data)
+- Shopping list tab (replaced Scan placeholder)
+- Auto-population from low and out of stock items
+- Manual item addition
+- Restock flow — tick off → updates inventory automatically
+- Manual items → prompt to add to inventory
+- Pre-filled add-item screen from shopping list
+- Price comparison tab (crowdsourced from user data)
+- Profile screen with postcode validation
 
 ### Next session
-- Shopping list feature
+- Polish pass — consistent spacing, edge cases
+- README for GitHub
+- TestFlight / Play Store internal testing setup
+- Prepare for real users
 
 ## Known Technical Debt
 - Android push notifications don't work in Expo Go (SDK 53+ limitation)
   Fix: Create a development build via EAS before launch
-  Reference: https://docs.expo.dev/develop/development-builds/introduction/
+- Multiple inventories not exposed in UI (architecture ready, V2 feature)
+- Receipt scanning placeholder (V2 feature)

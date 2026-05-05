@@ -66,8 +66,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="scan"
         options={{
-          title: "Scan",
-          tabBarIcon: ({ color }) => <TabIcon emoji="📸" color={color} />,
+          title: "Shopping",
+          tabBarIcon: ({ color }) => <TabIcon emoji="🛒" color={color} />,
         }}
       />
       <Tabs.Screen

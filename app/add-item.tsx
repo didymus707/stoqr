@@ -11,7 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/stores/auth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -33,8 +33,9 @@ const UNITS = [
 const AddItemScreen = () => {
   const router = useRouter();
   const { session } = useAuth();
+  const { name: prefilledName } = useLocalSearchParams<{ name: string }>();
 
-  const [name, setName] = useState("");
+  const [name, setName] = useState(prefilledName ?? "");
   const [unit, setUnit] = useState("pcs");
   const [store, setStore] = useState("");
   const [price, setPrice] = useState("");
