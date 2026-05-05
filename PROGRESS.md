@@ -117,7 +117,7 @@
 - Shopping list feature
 
 
-## Session 6 — Apr 30, 2026
+## Session 7 — May 4, 2026
 ### Completed
 - Inventory tab with full item list
 - Search by name (client-side)
