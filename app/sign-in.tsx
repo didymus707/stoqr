@@ -106,6 +106,13 @@ export default function SignInScreen() {
         </View>
 
         <TouchableOpacity
+          onPress={() => router.push("/forgot-password")}
+          style={styles.forgotButton}
+        >
+          <Text style={styles.forgotText}>Forgot password?</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={[styles.button, loading && styles.buttonDisabled]}
           onPress={handleSignIn}
           disabled={loading}
@@ -221,5 +228,12 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.status.danger,
     marginTop: 2,
+  },
+  forgotButton: {
+    alignSelf: "flex-end",
+  },
+  forgotText: {
+    fontSize: FontSize.sm,
+    color: Colors.primary,
   },
 });
