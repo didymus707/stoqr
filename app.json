@@ -40,6 +40,13 @@
     "notification": {
       "icon": "./assets/icon.png",
       "color": "#4F46E5"
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "01715ab4-e868-4678-aaaa-06dfe1205961"
+      }
+    },
+    "owner": "didymus707"
   }
 }

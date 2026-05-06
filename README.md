@@ -45,7 +45,7 @@ StoQr fixes that.
 ### Installation
 
 ```bash
-git clone https://github.com/didymus707/stocksense.git
+git clone https://github.com/didymus707/stoqr.git
 cd stoqr
 npm install
 ```
