@@ -9,10 +9,20 @@ import { useEffect } from "react";
 import { useAuth } from "@/stores/auth";
 import { useRouter } from "expo-router";
 import { Colors, FontSize, Spacing, BorderRadius } from "../constants/theme";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const { session, loading } = useAuth();
+
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      const seen = await AsyncStorage.getItem("hasSeenOnboarding");
+      if (!seen) router.replace("/onboarding");
+    };
+
+    checkOnboarding();
+  }, []);
 
   useEffect(() => {
     if (!loading && session) {
