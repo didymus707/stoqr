@@ -160,3 +160,29 @@
   Fix: Create a development build via EAS before launch
 - Multiple inventories not exposed in UI (architecture ready, V2 feature)
 - Receipt scanning placeholder (V2 feature)
+
+## Session 9 — May 6, 2026
+### Completed
+- Onboarding flow (3 screens, shows once on first launch)
+- Forgot password screen
+- Store session context — set active store, pre-fills all new items
+- Custom store input for unlisted stores
+- Quick add hint — reduces friction on add item form
+- Compare prices resets to empty state when search cleared
+- Back navigation fix with CanGoBack
+- App icon and splash screen assets added
+- README
+
+### Next session
+- EAS build setup
+- Android APK for beta testers
+- iOS TestFlight setup
+- Deep link for password reset
+
+## Known Technical Debt
+- Android push notifications don't work in Expo Go (SDK 53+ limitation)
+  Fix: Create a development build via EAS before launch
+- Multiple inventories not exposed in UI (architecture ready, V2 feature)
+- Receipt scanning placeholder (V2 feature)
+- Password reset deep link opens browser instead of app in Expo Go
+  Fix: Configure deep links in EAS build
