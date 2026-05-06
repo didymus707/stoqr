@@ -13,8 +13,9 @@ import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { useInventory } from "@/hooks/useInventory";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
+import { useShoppingSession } from "@/stores/shopping-session";
 import { useActionSheet } from "@expo/react-native-action-sheet";
+import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
 
 type FilterStatus = "all" | "ok" | "low" | "out";
 
@@ -28,7 +29,6 @@ const getUnitLabel = (quantity: number, unit: string): string => {
     litre: "litres",
   };
 
-  // Metric abbreviations (kg, g, ml) don't typically change
   const staysSingular = ["kg", "g", "ml"];
 
   if (staysSingular.includes(unit)) return unit;
@@ -41,6 +41,7 @@ export default function InventoryScreen() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterStatus>("all");
   const { items, loading, refetch, updateQuantity } = useInventory();
+  const { activeStore, setActiveStore } = useShoppingSession();
   const { showActionSheetWithOptions } = useActionSheet();
 
   const handleMoreOptions = (item: Item) => {
@@ -68,7 +69,7 @@ export default function InventoryScreen() {
     .filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
     .filter((item) => (filter === "all" ? true : item.status === filter));
 
-  async function handleDelete(item: Item) {
+  const handleDelete = async (item: Item) => {
     Alert.alert(`Delete ${item.name}?`, "This action cannot be undone.", [
       { text: "Cancel", style: "cancel" },
       {
@@ -89,7 +90,7 @@ export default function InventoryScreen() {
         },
       },
     ]);
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -102,6 +103,17 @@ export default function InventoryScreen() {
           <Text style={styles.addButtonText}>+</Text>
         </TouchableOpacity>
       </View>
+
+      {activeStore && (
+        <View style={styles.storeBanner}>
+          <Text style={styles.storeBannerText}>
+            📍 Shopping at {activeStore}
+          </Text>
+          <TouchableOpacity onPress={() => setActiveStore(null)}>
+            <Text style={styles.storeBannerClose}>✕</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.searchContainer}>
         <TextInput
@@ -449,5 +461,37 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     color: Colors.text.muted,
     fontWeight: "600",
+  },
+  storeBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: Colors.primary + "15",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  storeBannerText: {
+    fontSize: FontSize.sm,
+    color: Colors.primary,
+    fontWeight: "500",
+  },
+  storeBannerClose: {
+    fontSize: FontSize.sm,
+    color: Colors.primary,
+    fontWeight: "600",
+  },
+  sessionButton: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
+  sessionButtonText: {
+    fontSize: FontSize.xs,
+    color: Colors.text.secondary,
+    fontWeight: "500",
   },
 });

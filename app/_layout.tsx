@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { AuthProvider } from "@/stores/auth";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { ShoppingSessionProvider } from "@/stores/shopping-session";
 import { ActionSheetProvider } from "@expo/react-native-action-sheet";
 
 export default function RootLayout() {
@@ -8,7 +9,9 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ActionSheetProvider>
         <AuthProvider>
-          <Stack screenOptions={{ headerShown: false }} />
+          <ShoppingSessionProvider>
+            <Stack screenOptions={{ headerShown: false }} />
+          </ShoppingSessionProvider>
         </AuthProvider>
       </ActionSheetProvider>
     </SafeAreaProvider>
