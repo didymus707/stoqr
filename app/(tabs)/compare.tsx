@@ -29,7 +29,7 @@ export default function CompareScreen() {
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSearch() {
+  const handleSearch = async () => {
     if (!search.trim()) return;
 
     setLoading(true);
@@ -50,7 +50,7 @@ export default function CompareScreen() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -67,7 +67,13 @@ export default function CompareScreen() {
           placeholder="Search for an item..."
           placeholderTextColor={Colors.text.muted}
           value={search}
-          onChangeText={setSearch}
+          onChangeText={(text) => {
+            setSearch(text);
+            if (!text.trim()) {
+              setSearched(false);
+              setResults([]);
+            }
+          }}
           onSubmitEditing={handleSearch}
           returnKeyType="search"
           autoCapitalize="none"

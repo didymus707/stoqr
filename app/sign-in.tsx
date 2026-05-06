@@ -60,7 +60,7 @@ export default function SignInScreen() {
       <TouchableOpacity
         style={styles.backButton}
         onPress={() =>
-          canUserGoBack ? router.back() : router.replace("/welcome")
+          canUserGoBack ? router.back() : router.replace("/")
         }
       >
         <Text style={styles.backText}>← Back</Text>
@@ -104,6 +104,13 @@ export default function SignInScreen() {
             </Pressable>
           </View>
         </View>
+
+        <TouchableOpacity
+          onPress={() => router.push("/forgot-password")}
+          style={styles.forgotButton}
+        >
+          <Text style={styles.forgotText}>Forgot password?</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.button, loading && styles.buttonDisabled]}
@@ -221,5 +228,12 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.status.danger,
     marginTop: 2,
+  },
+  forgotButton: {
+    alignSelf: "flex-end",
+  },
+  forgotText: {
+    fontSize: FontSize.sm,
+    color: Colors.primary,
   },
 });
