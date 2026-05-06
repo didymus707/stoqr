@@ -11,9 +11,10 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/stores/auth";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useShoppingSession } from "@/stores/shopping-session";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
 
@@ -33,11 +34,15 @@ const UNITS = [
 const AddItemScreen = () => {
   const router = useRouter();
   const { session } = useAuth();
-  const { name: prefilledName } = useLocalSearchParams<{ name: string }>();
+  const { activeStore } = useShoppingSession();
+  const { name: prefilledName, store: prefilledStore } = useLocalSearchParams<{
+    name: string;
+    store: string;
+  }>();
 
   const [name, setName] = useState(prefilledName ?? "");
   const [unit, setUnit] = useState("pcs");
-  const [store, setStore] = useState("");
+  const [store, setStore] = useState(prefilledStore ?? activeStore ?? "");
   const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [loading, setLoading] = useState(false);
@@ -145,7 +150,7 @@ const AddItemScreen = () => {
             <Text style={styles.cancelText}>Cancel</Text>
           </TouchableOpacity>
           <Text style={styles.title}>Add Item</Text>
-          <TouchableOpacity onPress={handleAddItem} disabled={loading}>
+          <TouchableOpacity onPress={handleAddItem}>
             {loading ? (
               <ActivityIndicator size={16} color={Colors.primary} />
             ) : (
@@ -171,6 +176,9 @@ const AddItemScreen = () => {
               autoCapitalize="words"
               autoFocus
             />
+            <Text style={styles.hint}>
+              You can add more details later from your inventory
+            </Text>
             {errors.name ? (
               <Text style={styles.errorText}>{errors.name}</Text>
             ) : null}

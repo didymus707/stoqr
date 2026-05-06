@@ -9,11 +9,13 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useShoppingList } from "@/hooks/useShoppingList";
-import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
 import { Item } from "@/types/database";
+import { useRouter } from "expo-router";
+import { useShoppingList } from "@/hooks/useShoppingList";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useActionSheet } from "@expo/react-native-action-sheet";
+import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
+import { useShoppingSession } from "@/stores/shopping-session";
 
 export default function ShoppingListScreen() {
   const router = useRouter();
@@ -24,19 +26,51 @@ export default function ShoppingListScreen() {
     error,
     addManualItem,
     removeManualItem,
-    toggleManualItem,
     restockItem,
   } = useShoppingList();
-
   const [newItemName, setNewItemName] = useState("");
+  const [showCustomStore, setShowCustomStore] = useState<boolean>(false);
+  const [customStoreName, setCustomStoreName] = useState("");
+  const { showActionSheetWithOptions } = useActionSheet();
+  const { activeStore, setActiveStore } = useShoppingSession();
 
-  function handleAddManualItem() {
+  const handleAddManualItem = () => {
     if (!newItemName.trim()) return;
     addManualItem(newItemName);
     setNewItemName("");
-  }
+  };
 
-  async function handleRestockItem(item: Item) {
+  const handleStartShoppingSession = () => {
+    const commonStores = [
+      "Aldi",
+      "Lidl",
+      "Tesco",
+      "Asda",
+      "Sainsbury's",
+      "Morrisons",
+    ];
+
+    showActionSheetWithOptions(
+      {
+        options: [...commonStores, "Other", "Cancel"],
+        cancelButtonIndex: commonStores.length + 1,
+        title: "Which store are you in?",
+      },
+      (selectedIndex) => {
+        if (selectedIndex === undefined) return;
+        if (selectedIndex === commonStores.length + 1) return; // Cancel
+
+        if (selectedIndex === commonStores.length) {
+          // Other — show a text input alert
+          setShowCustomStore(true);
+        } else {
+          setActiveStore(commonStores[selectedIndex]);
+        }
+      },
+    );
+  };
+
+  const handleRestockItem = async (item: Item) => {
     Alert.alert(
       `Bought ${item.name}?`,
       "This will mark it as restocked in your inventory.",
@@ -54,9 +88,9 @@ export default function ShoppingListScreen() {
         },
       ],
     );
-  }
+  };
 
-  function handleTickManualItem(id: string, name: string) {
+  const handleTickManualItem = (id: string, name: string) => {
     Alert.alert(
       `Bought ${name}?`,
       "Would you like to add it to your inventory?",
@@ -70,12 +104,14 @@ export default function ShoppingListScreen() {
           text: "Add to inventory",
           onPress: () => {
             removeManualItem(id);
+            const params = new URLSearchParams({ name });
+            if (activeStore) params.append("store", activeStore);
             router.push(`/add-item?name=${encodeURIComponent(name)}`);
           },
         },
       ],
     );
-  }
+  };
 
   const totalItems = lowStockItems.length + manualItems.length;
 
@@ -88,7 +124,70 @@ export default function ShoppingListScreen() {
             <Text style={styles.badgeText}>{totalItems}</Text>
           </View>
         )}
+        <View style={{ marginLeft: "auto" }}>
+          {!activeStore && (
+            <TouchableOpacity
+              style={styles.sessionButton}
+              onPress={() => handleStartShoppingSession()}
+            >
+              <Text style={styles.sessionButtonText}>📍 At a store?</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
+
+      {activeStore && (
+        <View style={styles.storeBanner}>
+          <Text style={styles.storeBannerText}>
+            📍 Shopping at {activeStore}
+          </Text>
+          <TouchableOpacity onPress={() => setActiveStore(null)}>
+            <Text style={styles.storeBannerClose}>✕</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {showCustomStore && (
+        <View style={styles.customStoreContainer}>
+          <TextInput
+            style={styles.customStoreInput}
+            placeholder="Enter store name..."
+            placeholderTextColor={Colors.text.muted}
+            value={customStoreName}
+            onChangeText={setCustomStoreName}
+            autoFocus
+            autoCapitalize="words"
+            returnKeyType="done"
+            onSubmitEditing={() => {
+              if (customStoreName.trim()) {
+                setActiveStore(customStoreName.trim());
+                setCustomStoreName("");
+                setShowCustomStore(false);
+              }
+            }}
+          />
+          <TouchableOpacity
+            style={styles.customStoreButton}
+            onPress={() => {
+              if (customStoreName.trim()) {
+                setActiveStore(customStoreName.trim());
+                setCustomStoreName("");
+                setShowCustomStore(false);
+              }
+            }}
+          >
+            <Text style={styles.customStoreButtonText}>Set</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setShowCustomStore(false);
+              setCustomStoreName("");
+            }}
+          >
+            <Text style={styles.storeBannerClose}>✕</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.addContainer}>
         <TextInput
@@ -171,13 +270,13 @@ export default function ShoppingListScreen() {
   );
 }
 
-function LowStockRow({
+const LowStockRow = ({
   item,
   onRestock,
 }: {
   item: Item;
   onRestock: () => void;
-}) {
+}) => {
   const isOut = item.status === "out";
   const statusColor = isOut ? Colors.status.danger : Colors.status.warning;
 
@@ -197,9 +296,9 @@ function LowStockRow({
       <Text style={styles.checkAction}>✓ Got it</Text>
     </TouchableOpacity>
   );
-}
+};
 
-function ManualItemRow({
+const ManualItemRow = ({
   name,
   checked,
   onTick,
@@ -209,7 +308,7 @@ function ManualItemRow({
   checked: boolean;
   onTick: () => void;
   onRemove: () => void;
-}) {
+}) => {
   return (
     <View style={styles.itemRow}>
       <TouchableOpacity
@@ -226,7 +325,7 @@ function ManualItemRow({
       </TouchableOpacity>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -382,5 +481,68 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: FontSize.sm,
     color: Colors.status.danger,
+  },
+  storeBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: Colors.primary + "15",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  storeBannerText: {
+    fontSize: FontSize.sm,
+    color: Colors.primary,
+    fontWeight: "500",
+  },
+  storeBannerClose: {
+    fontSize: FontSize.sm,
+    color: Colors.primary,
+    fontWeight: "600",
+  },
+  sessionButton: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
+  sessionButtonText: {
+    fontSize: FontSize.xs,
+    color: Colors.text.secondary,
+    fontWeight: "500",
+  },
+  customStoreContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    gap: Spacing.sm,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 0.5,
+    borderBottomColor: Colors.border,
+  },
+  customStoreInput: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.sm,
+    fontSize: FontSize.sm,
+    color: Colors.text.primary,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  customStoreButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  customStoreButtonText: {
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: FontSize.sm,
   },
 });
