@@ -30,7 +30,7 @@ export const requestNotificationPermissions = async () => {
 
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
-      name: "StockSense Alerts",
+      name: "StoQr Alerts",
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
     });

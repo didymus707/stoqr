@@ -44,7 +44,7 @@ export default function WelcomeScreen() {
         <View style={styles.logoContainer}>
           <Text style={styles.logoEmoji}>📦</Text>
         </View>
-        <Text style={styles.title}>StockSense</Text>
+        <Text style={styles.title}>StoQr</Text>
         <Text style={styles.tagline}>Your intelligent inventory assistant</Text>
       </View>
 

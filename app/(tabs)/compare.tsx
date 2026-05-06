@@ -57,7 +57,7 @@ export default function CompareScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Compare Prices</Text>
         <Text style={styles.subtitle}>
-          Based on prices logged by StockSense users
+          Based on prices logged by S users
         </Text>
       </View>
 
