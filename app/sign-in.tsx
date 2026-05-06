@@ -60,7 +60,7 @@ export default function SignInScreen() {
       <TouchableOpacity
         style={styles.backButton}
         onPress={() =>
-          canUserGoBack ? router.back() : router.replace("/welcome")
+          canUserGoBack ? router.back() : router.replace("/")
         }
       >
         <Text style={styles.backText}>← Back</Text>
