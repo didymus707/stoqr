@@ -15,6 +15,7 @@ import {
 } from "react-native-safe-area-context";
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
+import BudgetSnapshot from "@/components/features/BudgetSnapshot";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -107,6 +108,8 @@ export default function HomeScreen() {
           <SummaryCard label="Low Stock" value={String(stats.low)} alert />
           <SummaryCard label="Out of Stock" value={String(stats.out)} danger />
         </View>
+
+        <BudgetSnapshot />
 
         <Text style={styles.sectionTitle}>Inventory</Text>
 
