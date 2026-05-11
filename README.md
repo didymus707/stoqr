@@ -1,4 +1,4 @@
-# StockSense 📦
+# StoQr 📦
 
 > Your intelligent inventory assistant — track what you have, get alerted when you're running low, and find the best prices near you.
 
@@ -6,7 +6,7 @@
 
 Most people manage their home inventory with paper lists, mental notes, or not at all. They run out of milk mid-week, forget to buy washing powder, or overspend because they don't know which store is cheapest.
 
-StockSense fixes that.
+StoQr fixes that.
 
 ## Features
 
@@ -45,8 +45,8 @@ StockSense fixes that.
 ### Installation
 
 ```bash
-git clone https://github.com/didymus707/stocksense.git
-cd stocksense
+git clone https://github.com/didymus707/stoqr.git
+cd stoqr
 npm install
 ```
 
@@ -70,7 +70,7 @@ Press `w` for web, scan QR for iOS/Android via Expo Go.
 
 ## Project Structure
 
-stocksense/
+stoqr/
 ├── app/                  # Screens (Expo Router file-based routing)
 │   ├── (tabs)/           # Tab navigator screens
 │   ├── add-item.tsx      # Add inventory item

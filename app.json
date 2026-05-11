@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "StockSense",
-    "slug": "stocksense",
+    "name": "StoQr",
+    "slug": "stoqr",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "scheme": "stocksense",
+    "scheme": "stoqr",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -14,14 +14,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.didymus.stocksense"
+      "bundleIdentifier": "com.didymus.stoqr"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#4F46E5"
       },
-      "package": "com.didymus.stocksense"
+      "package": "com.didymus.stoqr"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -40,6 +40,13 @@
     "notification": {
       "icon": "./assets/icon.png",
       "color": "#4F46E5"
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "01715ab4-e868-4678-aaaa-06dfe1205961"
+      }
+    },
+    "owner": "didymus707"
   }
 }

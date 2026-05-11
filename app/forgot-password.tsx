@@ -38,7 +38,7 @@ export default function ForgotPasswordScreen() {
     setError("");
 
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: "stocksense://reset-password",
+      redirectTo: "s://reset-password",
     });
 
     setLoading(false);

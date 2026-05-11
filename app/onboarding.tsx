@@ -27,7 +27,7 @@ const SLIDES = [
     emoji: "📦",
     title: "Track what you have.\nGet alerted early.",
     subtitle:
-      "StockSense monitors your household inventory and tells you before you run out — not after.",
+      "StoQr monitors your household inventory and tells you before you run out — not after.",
     accent: "#059669",
   },
   {
