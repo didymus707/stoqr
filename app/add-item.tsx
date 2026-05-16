@@ -47,6 +47,8 @@ const AddItemScreen = () => {
   const [quantity, setQuantity] = useState("1");
   const [loading, setLoading] = useState(false);
   const [threshold, setThreshold] = useState("1");
+  const [priceMode, setPriceMode] = useState<"per_unit" | "total">("per_unit");
+  const [priceInput, setPriceInput] = useState('')
   const insets = useSafeAreaInsets();
 
   const [errors, setErrors] = useState({
