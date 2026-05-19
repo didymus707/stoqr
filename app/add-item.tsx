@@ -48,14 +48,21 @@ const AddItemScreen = () => {
   const [loading, setLoading] = useState(false);
   const [threshold, setThreshold] = useState("1");
   const [priceMode, setPriceMode] = useState<"per_unit" | "total">("per_unit");
-  const [priceInput, setPriceInput] = useState('')
-  const insets = useSafeAreaInsets();
-
+  const [priceInput, setPriceInput] = useState("");
   const [errors, setErrors] = useState({
     name: "",
     quantity: "",
     form: "",
   });
+  const insets = useSafeAreaInsets();
+
+  const parsedQty = parseFloat(quantity) || 1;
+  const parsedPrice = parseFloat(priceInput) || 0;
+
+  const pricePerUnit =
+    priceMode === "per_unit" ? parsedPrice : parsedPrice / parsedQty;
+  const totalValue =
+    priceMode === "total" ? parsedPrice : parsedPrice * parsedQty;
 
   const calculateStatus = (
     qty: number,
@@ -73,7 +80,21 @@ const AddItemScreen = () => {
       newErrors.name = "Item name is required";
     }
 
-    const parsedQty = parseFloat(quantity);
+    const parsedQty = parseFloat(quantity) || 1;
+    const parsedPriceInput = priceInput ? parseFloat(priceInput) : null;
+
+    const finalPricePerUnit = parsedPriceInput
+      ? priceMode === "per_unit"
+        ? parsedPriceInput
+        : parsedPriceInput / parsedQty
+      : null;
+
+    const finalTotalValue = parsedPriceInput
+      ? priceMode === "total"
+        ? parsedPriceInput
+        : parsedPriceInput * parsedQty
+      : null;
+
     if (isNaN(parsedQty) || parsedQty < 0) {
       newErrors.quantity = "Please enter a valid quantity";
     }
@@ -124,7 +145,9 @@ const AddItemScreen = () => {
         low_stock_threshold: parsedThreshold,
         status,
         store: store.trim() || null,
-        price: parsedPrice,
+        price: finalPricePerUnit,
+        total_value: finalTotalValue,
+        price_mode: priceMode,
       });
 
       if (itemError) throw itemError;
@@ -198,7 +221,18 @@ const AddItemScreen = () => {
                   setQuantity(text);
                   setErrors((prev) => ({ ...prev, quantity: "" }));
                 }}
-                keyboardType="numeric"
+                keyboardType={
+                  [
+                    "pcs",
+                    "cans",
+                    "bottles",
+                    "bags",
+                    "boxes",
+                    "loaves",
+                  ].includes(unit)
+                    ? "number-pad"
+                    : "decimal-pad"
+                }
               />
               {errors.quantity ? (
                 <Text style={styles.errorText}>{errors.quantity}</Text>
@@ -268,14 +302,58 @@ const AddItemScreen = () => {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Price (£)</Text>
+            <View style={styles.priceModeToggle}>
+              <TouchableOpacity
+                style={[
+                  styles.priceModeButton,
+                  priceMode === "per_unit" && styles.priceModeButtonActive,
+                ]}
+                onPress={() => setPriceMode("per_unit")}
+              >
+                <Text
+                  style={[
+                    styles.priceModeText,
+                    priceMode === "total" && styles.priceModeTextActive,
+                  ]}
+                >
+                  Per Unit
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.priceModeButton,
+                  priceMode === "total" && styles.priceModeButtonActive,
+                ]}
+                onPress={() => setPriceMode("total")}
+              >
+                <Text
+                  style={[
+                    styles.priceModeText,
+                    priceMode === "total" && styles.priceModeTextActive,
+                  ]}
+                >
+                  Total paid
+                </Text>
+              </TouchableOpacity>
+            </View>
             <TextInput
               style={styles.input}
-              placeholder="0.00"
+              placeholder={
+                priceMode === "per_unit" ? "£0.00 per item" : "£0.00 total"
+              }
               placeholderTextColor={Colors.text.muted}
-              value={price}
-              onChangeText={setPrice}
+              value={priceInput}
+              onChangeText={setPriceInput}
               keyboardType="decimal-pad"
             />
+
+            {priceInput && parseFloat(priceInput) > 0 && (
+              <Text style={styles.hint}>
+                {priceMode === "per_unit"
+                  ? `Total: £${totalValue.toFixed(2)} for ${quantity} ${unit}`
+                  : `£${pricePerUnit.toFixed(2)} per ${unit}`}
+              </Text>
+            )}
           </View>
         </View>
 
@@ -388,6 +466,32 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.status.danger,
     marginTop: Spacing.xs,
+  },
+  priceModeToggle: {
+    flexDirection: "row",
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 3,
+    marginBottom: Spacing.xs,
+  },
+  priceModeButton: {
+    flex: 1,
+    paddingVertical: Spacing.xs,
+    alignItems: "center",
+    borderRadius: BorderRadius.sm,
+  },
+  priceModeButtonActive: {
+    backgroundColor: Colors.primary,
+  },
+  priceModeText: {
+    fontSize: FontSize.sm,
+    color: Colors.text.secondary,
+    fontWeight: "500",
+  },
+  priceModeTextActive: {
+    color: "#ffffff",
   },
 });
 
