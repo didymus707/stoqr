@@ -134,7 +134,6 @@ const AddItemScreen = () => {
       }
 
       const parsedThreshold = parseFloat(threshold) || 1;
-      const parsedPrice = price ? parseFloat(price) : null;
       const status = calculateStatus(parsedQty, parsedThreshold);
 
       const { error: itemError } = await supabase.from("items").insert({
