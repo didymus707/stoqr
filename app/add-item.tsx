@@ -313,7 +313,7 @@ const AddItemScreen = () => {
                 <Text
                   style={[
                     styles.priceModeText,
-                    priceMode === "total" && styles.priceModeTextActive,
+                    priceMode === "per_unit" && styles.priceModeTextActive,
                   ]}
                 >
                   Per Unit
