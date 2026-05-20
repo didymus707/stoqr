@@ -7,9 +7,8 @@ import {
   TextInput,
   ScrollView,
   ActivityIndicator,
-  
   Platform,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
 } from "react-native";
 import { supabase } from "@/lib/supabase";
 import { useInventory } from "@/hooks/useInventory";
@@ -41,9 +40,19 @@ const EditItemScreen = () => {
   const [unit, setUnit] = useState("pcs");
   const [store, setStore] = useState("");
   const [price, setPrice] = useState("");
+  const [loading, setLoading] = useState(false);
   const [quantity, setQuantity] = useState("1");
   const [threshold, setThreshold] = useState("1");
-  const [loading, setLoading] = useState(false);
+  const [priceInput, setPriceInput] = useState("");
+  const [priceMode, setPriceMode] = useState<"per_unit" | "total">("per_unit");
+
+  const parsedQty = parseFloat(quantity) || 1;
+  const parsedPrice = parseFloat(priceInput) || 0;
+
+  const pricePerUnit =
+    priceMode === "per_unit" ? parsedPrice : parsedPrice / parsedQty;
+  const totalValue =
+    priceMode === "total" ? parsedPrice : parsedPrice * parsedQty;
 
   const [errors, setErrors] = useState({
     name: "",
@@ -67,7 +76,20 @@ const EditItemScreen = () => {
       newErrors.name = "Item name is required";
     }
 
-    const parsedQty = parseFloat(quantity);
+    const parsedQty = parseFloat(quantity) || 1;
+    const parsedPriceInput = priceInput ? parseFloat(priceInput) : null;
+
+    const finalPricePerUnit = parsedPriceInput
+      ? priceMode === "per_unit"
+        ? parsedPriceInput
+        : parsedPriceInput / parsedQty
+      : null;
+    const finalTotalValue = parsedPriceInput
+      ? priceMode === "total"
+        ? parsedPriceInput
+        : parsedPriceInput * parsedQty
+      : null;
+
     if (isNaN(parsedQty) || parsedQty < 0) {
       newErrors.quantity = "Please enter a valid quantity";
     }
@@ -91,7 +113,9 @@ const EditItemScreen = () => {
           low_stock_threshold: parsedThreshold,
           status,
           store: store.trim() || null,
-          price: parsedPrice,
+          price: finalPricePerUnit,
+          total_value: finalTotalValue,
+          price_mode: priceMode,
         })
         .eq("id", id);
 
@@ -129,146 +153,180 @@ const EditItemScreen = () => {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.cancelText}>Cancel</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>Edit Item</Text>
-          <TouchableOpacity onPress={handleEditItem} disabled={loading}>
-            {loading ? (
-              <ActivityIndicator size={16} color={Colors.primary} />
-            ) : (
-              <Text style={styles.saveText}>Save</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Item Details</Text>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Name *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Whole Milk"
-              placeholderTextColor={Colors.text.muted}
-              value={name}
-              onChangeText={(text) => {
-                setName(text);
-                setErrors((prev) => ({ ...prev, name: "" }));
-              }}
-              autoCapitalize="words"
-              autoFocus
-            />
-            {errors.name ? (
-              <Text style={styles.errorText}>{errors.name}</Text>
-            ) : null}
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()}>
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={styles.title}>Edit Item</Text>
+            <TouchableOpacity onPress={handleEditItem} disabled={loading}>
+              {loading ? (
+                <ActivityIndicator size={16} color={Colors.primary} />
+              ) : (
+                <Text style={styles.saveText}>Save</Text>
+              )}
+            </TouchableOpacity>
           </View>
 
-          <View style={styles.row}>
-            <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={styles.label}>Quantity *</Text>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Item Details</Text>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Name *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. Whole Milk"
+                placeholderTextColor={Colors.text.muted}
+                value={name}
+                onChangeText={(text) => {
+                  setName(text);
+                  setErrors((prev) => ({ ...prev, name: "" }));
+                }}
+                autoCapitalize="words"
+                autoFocus
+              />
+              {errors.name ? (
+                <Text style={styles.errorText}>{errors.name}</Text>
+              ) : null}
+            </View>
+
+            <View style={styles.row}>
+              <View style={[styles.inputGroup, { flex: 1 }]}>
+                <Text style={styles.label}>Quantity *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="1"
+                  placeholderTextColor={Colors.text.muted}
+                  value={quantity}
+                  onChangeText={(text) => {
+                    setQuantity(text);
+                    setErrors((prev) => ({ ...prev, quantity: "" }));
+                  }}
+                  keyboardType="numeric"
+                />
+                {errors.quantity ? (
+                  <Text style={styles.errorText}>{errors.quantity}</Text>
+                ) : null}
+              </View>
+
+              <View style={[styles.inputGroup, { flex: 1 }]}>
+                <Text style={styles.label}>Unit</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.unitScroll}
+                >
+                  {UNITS.map((u) => (
+                    <TouchableOpacity
+                      key={u}
+                      style={[
+                        styles.unitChip,
+                        unit === u && styles.unitChipActive,
+                      ]}
+                      onPress={() => setUnit(u)}
+                    >
+                      <Text
+                        style={[
+                          styles.unitChipText,
+                          unit === u && styles.unitChipTextActive,
+                        ]}
+                      >
+                        {u}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Alert me when below</Text>
               <TextInput
                 style={styles.input}
                 placeholder="1"
                 placeholderTextColor={Colors.text.muted}
-                value={quantity}
-                onChangeText={(text) => {
-                  setQuantity(text);
-                  setErrors((prev) => ({ ...prev, quantity: "" }));
-                }}
+                value={threshold}
+                onChangeText={setThreshold}
                 keyboardType="numeric"
               />
-              {errors.quantity ? (
-                <Text style={styles.errorText}>{errors.quantity}</Text>
-              ) : null}
+              <Text style={styles.hint}>
+                We'll alert you when quantity drops to this level
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Store & Price (optional)</Text>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Store</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. Lidl, Tesco, Aldi"
+                placeholderTextColor={Colors.text.muted}
+                value={store}
+                onChangeText={setStore}
+                autoCapitalize="words"
+              />
             </View>
 
-            <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={styles.label}>Unit</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.unitScroll}
-              >
-                {UNITS.map((u) => (
-                  <TouchableOpacity
-                    key={u}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Price (£)</Text>
+              <View style={styles.priceModeToggle}>
+                <TouchableOpacity
+                  style={[
+                    styles.priceModeButton,
+                    priceMode === "per_unit" && styles.priceModeButtonActive,
+                  ]}
+                  onPress={() => setPriceMode("per_unit")}
+                >
+                  <Text
                     style={[
-                      styles.unitChip,
-                      unit === u && styles.unitChipActive,
+                      styles.priceModeText,
+                      priceMode === "per_unit" && styles.priceModeTextActive,
                     ]}
-                    onPress={() => setUnit(u)}
                   >
-                    <Text
-                      style={[
-                        styles.unitChipText,
-                        unit === u && styles.unitChipTextActive,
-                      ]}
-                    >
-                      {u}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+                    Per Unit
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.priceModeButton,
+                    priceMode === "total" && styles.priceModeButtonActive,
+                  ]}
+                  onPress={() => setPriceMode("total")}
+                >
+                  <Text
+                    style={[
+                      styles.priceModeText,
+                      priceMode === "total" && styles.priceModeTextActive,
+                    ]}
+                  >
+                    Total paid
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <TextInput
+                style={styles.input}
+                placeholder="0.00"
+                placeholderTextColor={Colors.text.muted}
+                value={price}
+                onChangeText={setPrice}
+                keyboardType="decimal-pad"
+              />
             </View>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Alert me when below</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="1"
-              placeholderTextColor={Colors.text.muted}
-              value={threshold}
-              onChangeText={setThreshold}
-              keyboardType="numeric"
-            />
-            <Text style={styles.hint}>
-              We'll alert you when quantity drops to this level
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Store & Price (optional)</Text>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Store</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Lidl, Tesco, Aldi"
-              placeholderTextColor={Colors.text.muted}
-              value={store}
-              onChangeText={setStore}
-              autoCapitalize="words"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Price (£)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="0.00"
-              placeholderTextColor={Colors.text.muted}
-              value={price}
-              onChangeText={setPrice}
-              keyboardType="decimal-pad"
-            />
-          </View>
-        </View>
-
-        {errors.form ? (
-          <Text style={styles.errorText}>{errors.form}</Text>
-        ) : null}
-      </ScrollView>
-    </SafeAreaView>
+          {errors.form ? (
+            <Text style={styles.errorText}>{errors.form}</Text>
+          ) : null}
+        </ScrollView>
+      </SafeAreaView>
     </KeyboardAvoidingView>
   );
 };
@@ -374,6 +432,32 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.status.danger,
     marginTop: Spacing.xs,
+  },
+  priceModeToggle: {
+    flexDirection: "row",
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 3,
+    marginBottom: Spacing.xs,
+  },
+  priceModeButton: {
+    flex: 1,
+    paddingVertical: Spacing.xs,
+    alignItems: "center",
+    borderRadius: BorderRadius.sm,
+  },
+  priceModeButtonActive: {
+    backgroundColor: Colors.primary,
+  },
+  priceModeText: {
+    fontSize: FontSize.sm,
+    color: Colors.text.secondary,
+    fontWeight: "500",
+  },
+  priceModeTextActive: {
+    color: "#ffffff",
   },
 });
 
