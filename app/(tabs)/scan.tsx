@@ -29,10 +29,54 @@ export default function ShoppingListScreen() {
     restockItem,
   } = useShoppingList();
   const [newItemName, setNewItemName] = useState("");
-  const [showCustomStore, setShowCustomStore] = useState<boolean>(false);
-  const [customStoreName, setCustomStoreName] = useState("");
   const { showActionSheetWithOptions } = useActionSheet();
+  const [customStoreName, setCustomStoreName] = useState("");
   const { activeStore, setActiveStore } = useShoppingSession();
+  const [showCustomStore, setShowCustomStore] = useState<boolean>(false);
+  const [checkedLowStock, setCheckedLowStock] = useState<Set<string>>(
+    new Set(),
+  );
+  const [dismissedLowStock, setDismissedLowStock] = useState<Set<string>>(
+    new Set(),
+  );
+
+  const toggleLowStockCheck = (id: string) => {
+    setCheckedLowStock((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const dismissLowStockItem = (id: string) =>
+    setDismissedLowStock((prev) => new Set([...prev, id]));
+
+  const handleRestockAll = async () => {
+    const itemsToRestock = lowStockItems.filter((i) =>
+      checkedLowStock.has(i.id),
+    );
+
+    Alert.alert(
+      `Restock ${itemsToRestock.length} item${itemsToRestock.length === 1 ? "" : "s"}?`,
+      itemsToRestock.map((i) => i.name).join(", "),
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Yes, all restocked",
+          onPress: async () => {
+            for (const item of itemsToRestock) {
+              await restockItem(item);
+            }
+            setCheckedLowStock(new Set());
+          },
+        },
+      ],
+    );
+  };
+
+  const visibleLowStockItems = lowStockItems.filter(
+    (i) => !dismissedLowStock.has(i.id),
+  );
 
   const handleAddManualItem = () => {
     if (!newItemName.trim()) return;
@@ -236,10 +280,26 @@ export default function ShoppingListScreen() {
               <Text style={styles.sectionTitle}>
                 Needs restocking ({lowStockItems.length})
               </Text>
-              {lowStockItems.map((item) => (
+
+              {checkedLowStock.size > 0 && (
+                <TouchableOpacity
+                  style={styles.restockAllButton}
+                  onPress={handleRestockAll}
+                >
+                  <Text style={styles.restockAllText}>
+                    ✓ Mark {checkedLowStock.size} item
+                    {checkedLowStock.size === 1 ? "" : "s"} as restocked
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              {visibleLowStockItems.map((item) => (
                 <LowStockRow
                   key={item.id}
                   item={item}
+                  checked={checkedLowStock.has(item.id)}
+                  onCheck={() => toggleLowStockCheck(item.id)}
+                  onDismiss={() => dismissLowStockItem(item.id)}
                   onRestock={() => handleRestockItem(item)}
                 />
               ))}
@@ -272,19 +332,34 @@ export default function ShoppingListScreen() {
 
 const LowStockRow = ({
   item,
+  onCheck,
+  checked,
+  onDismiss,
   onRestock,
 }: {
   item: Item;
+  checked: boolean;
+  onCheck: () => void;
+  onDismiss: () => void;
   onRestock: () => void;
 }) => {
   const isOut = item.status === "out";
   const statusColor = isOut ? Colors.status.danger : Colors.status.warning;
 
   return (
-    <TouchableOpacity style={styles.itemRow} onPress={onRestock}>
+    <View style={[styles.itemRow, checked && styles.itemRowChecked]}>
+      <TouchableOpacity
+        style={[styles.checkbox, checked && styles.checkboxChecked]}
+        onPress={onCheck}
+      >
+        {checked && <Text style={styles.checkmark}>✓</Text>}
+      </TouchableOpacity>
       <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+
       <View style={styles.itemInfo}>
-        <Text style={styles.itemName}>{item.name}</Text>
+        <Text style={[styles.itemName, checked && styles.itemNameChecked]}>
+          {item.name}
+        </Text>
         <Text style={styles.itemMeta}>
           {isOut
             ? "Out of stock"
@@ -293,8 +368,11 @@ const LowStockRow = ({
           {item.price ? ` · £${item.price.toFixed(2)}` : ""}
         </Text>
       </View>
-      <Text style={styles.checkAction}>✓ Got it</Text>
-    </TouchableOpacity>
+
+      <TouchableOpacity onPress={onDismiss}>
+        <Text style={styles.removeText}>x</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
@@ -541,6 +619,36 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   customStoreButtonText: {
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: FontSize.sm,
+  },
+  itemRowChecked: {
+    opacity: 0.6,
+  },
+  restockAllButton: {
+    backgroundColor: Colors.status.success,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.full,
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  restockAllText: {
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: FontSize.sm,
+  },
+  itemRowChecked: {
+    opacity: 0.6,
+  },
+  restockAllButton: {
+    backgroundColor: Colors.status.success,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.full,
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  restockAllText: {
     color: "#ffffff",
     fontWeight: "600",
     fontSize: FontSize.sm,
