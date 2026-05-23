@@ -186,3 +186,56 @@
 - Receipt scanning placeholder (V2 feature)
 - Password reset deep link opens browser instead of app in Expo Go
   Fix: Configure deep links in EAS build
+
+## Session 10 — May 12, 2026
+### Completed
+- App renamed from StockSense to stoQr
+- EAS build configured and deployed (Android APK live)
+- Budget snapshot on dashboard (store breakdown, top items)
+- Budget database function with coalesce for total_value
+- total_value and price_mode columns added to items table
+- Shopping list UX overhaul:
+  - Checkbox on low stock rows (consistent with manual items)
+  - Dismiss button (remove from list without restocking)
+  - Bulk restock confirm button
+  - Alert cancel button fix (iOS outside tap)
+  - Manual item removal deferred until inventory save succeeds
+- ManualItemRow remove button repositioned with marginLeft auto
+- Dynamic keyboard type based on unit (number-pad vs decimal-pad)
+- Product roadmap aligned across 5 dimensions
+- Tester feedback triaged
+
+### Known bugs / in progress
+- router.back() placement bug in add-item.tsx — fixed this session
+- Password reset deep link opens browser (EAS build config needed)
+- Android push notifications (EAS development build needed)
+- Transaction history not yet built (needed for proper spend tracking)
+
+### Next session (start fresh conversation)
+- Price mode toggle (per unit vs total paid) in add/edit item
+- Transaction history table and restock event logging
+- Monthly budget goal setting
+- Voice assistant (Claude API)
+- iOS TestFlight build
+
+### Current branch
+- feature/shopping-list-ux (ready to merge)
+
+## Product
+- App name: stoQr
+- Android APK: live, shared with beta testers
+- Active testers: sending feedback
+- GitHub: private repo
+
+## Tech stack
+- React Native + Expo SDK 54
+- Expo Router (file-based navigation)
+- Supabase (PostgreSQL + Auth + RLS)
+- TypeScript
+- EAS Build
+
+## Known Technical Debt
+- Android push notifications (Expo Go SDK 53+ limitation)
+- Password reset deep link needs EAS build config
+- Multiple inventories UI (architecture ready, V2)
+- Receipt scanning (V2)
