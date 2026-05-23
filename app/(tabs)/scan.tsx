@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -10,12 +10,13 @@ import {
   Alert,
 } from "react-native";
 import { Item } from "@/types/database";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useShoppingList } from "@/hooks/useShoppingList";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
 import { useShoppingSession } from "@/stores/shopping-session";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function ShoppingListScreen() {
   const router = useRouter();
@@ -140,6 +141,10 @@ export default function ShoppingListScreen() {
       "Would you like to add it to your inventory?",
       [
         {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
           text: "No, just remove",
           style: "cancel",
           onPress: () => removeManualItem(id),
@@ -147,15 +152,27 @@ export default function ShoppingListScreen() {
         {
           text: "Add to inventory",
           onPress: () => {
-            removeManualItem(id);
-            const params = new URLSearchParams({ name });
+            const params = new URLSearchParams({ name, manualItemId: id });
             if (activeStore) params.append("store", activeStore);
-            router.push(`/add-item?name=${encodeURIComponent(name)}`);
+            router.push(`/add-item?${params.toString()}`);
           },
         },
       ],
     );
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      const checkCompleted = async () => {
+        const completedId = await AsyncStorage.getItem("completedManualItem");
+        if (completedId) {
+          removeManualItem(completedId);
+          await AsyncStorage.removeItem("completedManualItem");
+        }
+      };
+      checkCompleted();
+    }, []),
+  );
 
   const totalItems = lowStockItems.length + manualItems.length;
 
@@ -398,7 +415,7 @@ const ManualItemRow = ({
       <Text style={[styles.itemName, checked && styles.itemNameChecked]}>
         {name}
       </Text>
-      <TouchableOpacity onPress={onRemove}>
+      <TouchableOpacity onPress={onRemove} style={{ marginLeft: "auto" }}>
         <Text style={styles.removeText}>✕</Text>
       </TouchableOpacity>
     </View>
@@ -619,21 +636,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   customStoreButtonText: {
-    color: "#ffffff",
-    fontWeight: "600",
-    fontSize: FontSize.sm,
-  },
-  itemRowChecked: {
-    opacity: 0.6,
-  },
-  restockAllButton: {
-    backgroundColor: Colors.status.success,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.full,
-    alignItems: "center",
-    marginBottom: Spacing.md,
-  },
-  restockAllText: {
     color: "#ffffff",
     fontWeight: "600",
     fontSize: FontSize.sm,

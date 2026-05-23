@@ -17,6 +17,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useShoppingSession } from "@/stores/shopping-session";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const UNITS = [
   "pc",
@@ -35,15 +36,19 @@ const AddItemScreen = () => {
   const router = useRouter();
   const { session } = useAuth();
   const { activeStore } = useShoppingSession();
-  const { name: prefilledName, store: prefilledStore } = useLocalSearchParams<{
+  const {
+    name: prefilledName,
+    store: prefilledStore,
+    manualItemId,
+  } = useLocalSearchParams<{
     name: string;
     store: string;
+    manualItemId: string;
   }>();
 
   const [name, setName] = useState(prefilledName ?? "");
   const [unit, setUnit] = useState("pcs");
   const [store, setStore] = useState(prefilledStore ?? activeStore ?? "");
-  const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [loading, setLoading] = useState(false);
   const [threshold, setThreshold] = useState("1");
@@ -151,6 +156,10 @@ const AddItemScreen = () => {
 
       if (itemError) throw itemError;
 
+      if (manualItemId) {
+        // checking if item was added successfully in order to remove it from shopping list using AsyncStorage
+        await AsyncStorage.setItem("completedManualItem", manualItemId);
+      }
       router.back();
     } catch (err: any) {
       setErrors((prev) => ({ ...prev, form: err.message }));
