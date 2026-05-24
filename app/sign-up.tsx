@@ -21,8 +21,9 @@ type FormErrors = {
   form: string;
 };
 
-const passwordRegex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const passwordRegex =
+  /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/;
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function SignUpScreen() {
   const [loading, setLoading] = useState<boolean>(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
 
   const [errors, setErrors] = useState({
     fullName: "",
@@ -191,14 +193,22 @@ export default function SignUpScreen() {
 
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Confirm Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Min. 8 characters"
-            placeholderTextColor={Colors.text.muted}
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-          />
+          <View style={styles.shwPwd}>
+            <TextInput
+              style={styles.input}
+              placeholder="Min. 8 characters"
+              placeholderTextColor={Colors.text.muted}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!showConfirmPassword}
+            />
+            <Pressable
+              onPress={() => setShowConfirmPassword((prev) => !prev)}
+              style={styles.emojiContainer}
+            >
+              <Text style={styles.emoji}>{showConfirmPassword ? "🙈" : "👁️"}</Text>
+            </Pressable>
+          </View>
           {errors.confirmPassword ? (
             <Text style={styles.errorText}>{errors.confirmPassword}</Text>
           ) : null}
