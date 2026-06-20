@@ -11,12 +11,13 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    flowType: "pkce",
   },
 });
 
 // Handle invalid refresh tokens by signing out automatically
 supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'TOKEN_REFRESHED' && !session) {
-    supabase.auth.signOut()
+  if (event === "TOKEN_REFRESHED" && !session) {
+    supabase.auth.signOut();
   }
-})
+});
