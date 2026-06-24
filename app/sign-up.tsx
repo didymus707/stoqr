@@ -12,6 +12,7 @@ import {
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { Colors, FontSize, Spacing, BorderRadius } from "../constants/theme";
+import { passwordRegex, passwordRequirementMessage } from "@/lib/validation";
 
 type FormErrors = {
   fullName: string;
@@ -21,8 +22,6 @@ type FormErrors = {
   form: string;
 };
 
-const passwordRegex =
-  /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function SignUpScreen() {
@@ -34,7 +33,8 @@ export default function SignUpScreen() {
   const [loading, setLoading] = useState<boolean>(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState<boolean>(false);
 
   const [errors, setErrors] = useState({
     fullName: "",
@@ -70,8 +70,7 @@ export default function SignUpScreen() {
     if (!password) {
       newErrors.password = "Password is required";
     } else if (!passwordRegex.test(password)) {
-      newErrors.password =
-        "Weak Password. Your password must have 8+ characters, uppercase, lowercase, number, and special character";
+      newErrors.password = passwordRequirementMessage;
     }
 
     if (!confirmPassword) {
@@ -206,7 +205,9 @@ export default function SignUpScreen() {
               onPress={() => setShowConfirmPassword((prev) => !prev)}
               style={styles.emojiContainer}
             >
-              <Text style={styles.emoji}>{showConfirmPassword ? "🙈" : "👁️"}</Text>
+              <Text style={styles.emoji}>
+                {showConfirmPassword ? "🙈" : "👁️"}
+              </Text>
             </Pressable>
           </View>
           {errors.confirmPassword ? (
