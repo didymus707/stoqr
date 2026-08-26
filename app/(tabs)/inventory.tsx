@@ -348,29 +348,6 @@ const styles = StyleSheet.create({
     color: Colors.text.muted,
     marginTop: 2,
   },
-  itemActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
-  },
-  statusPill: {
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.sm,
-  },
-  statusPillText: {
-    fontSize: FontSize.xs,
-    fontWeight: "600",
-  },
-  actionButton: {
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: Spacing.xs,
-  },
-  actionButtonText: {
-    fontSize: FontSize.xs,
-    color: Colors.primary,
-    fontWeight: "500",
-  },
   centeredContainer: {
     flex: 1,
     alignItems: "center",
@@ -399,11 +376,6 @@ const styles = StyleSheet.create({
     color: Colors.text.muted,
     textAlign: "center",
     paddingTop: Spacing.md,
-  },
-  quantityControls: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
   },
   qtyGroup: {
     flexDirection: "row",
