@@ -13,10 +13,17 @@ import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { useInventory } from "@/hooks/useInventory";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
 import { useActionSheet } from "@expo/react-native-action-sheet";
+import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
 
-type FilterStatus = "all" | "ok" | "low" | "out";
+type FilterStatus = "all" | "in_stock" | "low" | "out";
+
+const filterLabels: Record<FilterStatus, string> = {
+  all: "All",
+  in_stock: "In Stock",
+  low: "Low Stock",
+  out: "Out of stock",
+};
 
 const getUnitLabel = (quantity: number, unit: string): string => {
   if (quantity === 1) return unit;
@@ -64,9 +71,28 @@ export default function InventoryScreen() {
     );
   };
 
+  const emptyTitle = search
+    ? "No items found"
+    : filter === "all"
+      ? "No items yet"
+      : `No ${filterLabels[filter]} items`;
+
+  const emptySubtitle = search
+    ? `No results for "${search}"`
+    : filter === "all"
+      ? "Tap + to add your first item"
+      : "Try adjusting your filter";
+
   const filtered = items
     .filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
-    .filter((item) => (filter === "all" ? true : item.status === filter));
+    .filter((item) => {
+      if (filter === "all") return true;
+      if (filter === "in_stock") {
+        return item.status === "low" || item.status === "ok";
+      }
+
+      return item.status === filter;
+    });
 
   async function handleDelete(item: Item) {
     Alert.alert(`Delete ${item.name}?`, "This action cannot be undone.", [
@@ -115,7 +141,7 @@ export default function InventoryScreen() {
       </View>
 
       <View style={styles.filterRow}>
-        {(["all", "ok", "low", "out"] as FilterStatus[]).map((f) => (
+        {(["all", "in_stock", "low", "out"] as FilterStatus[]).map((f) => (
           <TouchableOpacity
             key={f}
             style={[styles.filterChip, filter === f && styles.filterChipActive]}
@@ -127,13 +153,7 @@ export default function InventoryScreen() {
                 filter === f && styles.filterChipTextActive,
               ]}
             >
-              {f === "all"
-                ? "All"
-                : f === "ok"
-                  ? "In stock"
-                  : f === "low"
-                    ? "Low stock"
-                    : "Out of stock"}
+              {filterLabels[f]}
             </Text>
           </TouchableOpacity>
         ))}
@@ -146,14 +166,8 @@ export default function InventoryScreen() {
       ) : filtered.length === 0 ? (
         <View style={styles.centeredContainer}>
           <Text style={styles.emptyEmoji}>📦</Text>
-          <Text style={styles.emptyTitle}>
-            {search ? "No items found" : "No items yet"}
-          </Text>
-          <Text style={styles.emptySubtitle}>
-            {search
-              ? `No results for "${search}"`
-              : "Tap + to add your first item"}
-          </Text>
+          <Text style={styles.emptyTitle}>{emptyTitle}</Text>
+          <Text style={styles.emptySubtitle}>{emptySubtitle}</Text>
         </View>
       ) : (
         <ScrollView
