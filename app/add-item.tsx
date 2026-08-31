@@ -69,15 +69,7 @@ const AddItemScreen = () => {
   const totalValue =
     priceMode === "total" ? parsedPrice : parsedPrice * parsedQty;
 
-  const calculateStatus = (
-    qty: number,
-    thresh: number,
-  ): "ok" | "low" | "out" => {
-    if (qty <= 0) return "out";
-    if (qty <= thresh) return "low";
-    return "ok";
-  };
-
+  
   const handleAddItem = async () => {
     const newErrors = { name: "", quantity: "", form: "" };
 
