@@ -93,7 +93,6 @@ const EditItemScreen = () => {
     try {
       const parsedThreshold = parseFloat(threshold) || 1;
       const parsedPrice = price ? parseFloat(price) : null;
-      const status = calculateStatus(parsedQty, parsedThreshold);
 
       const { error: itemError } = await supabase
         .from("items")
@@ -102,7 +101,6 @@ const EditItemScreen = () => {
           quantity: parsedQty,
           unit: unit,
           low_stock_threshold: parsedThreshold,
-          status,
           store: store.trim() || null,
           price: finalPricePerUnit,
           total_value: finalTotalValue,
