@@ -60,15 +60,6 @@ const EditItemScreen = () => {
     form: "",
   });
 
-  const calculateStatus = (
-    qty: number,
-    thresh: number,
-  ): "ok" | "low" | "out" => {
-    if (qty <= 0) return "out";
-    if (qty <= thresh) return "low";
-    return "ok";
-  };
-
   const handleEditItem = async () => {
     const newErrors = { name: "", quantity: "", form: "" };
 
@@ -102,7 +93,6 @@ const EditItemScreen = () => {
     try {
       const parsedThreshold = parseFloat(threshold) || 1;
       const parsedPrice = price ? parseFloat(price) : null;
-      const status = calculateStatus(parsedQty, parsedThreshold);
 
       const { error: itemError } = await supabase
         .from("items")
@@ -111,7 +101,6 @@ const EditItemScreen = () => {
           quantity: parsedQty,
           unit: unit,
           low_stock_threshold: parsedThreshold,
-          status,
           store: store.trim() || null,
           price: finalPricePerUnit,
           total_value: finalTotalValue,

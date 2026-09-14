@@ -1,6 +1,6 @@
 import { BorderRadius, Colors, FontSize, Spacing } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
-import { passwordRegex, passwordRequirementMessage } from "@/lib/validation";
+import { passwordRegex, passwordRequirementMessage } from "@/lib/utils";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {

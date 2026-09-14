@@ -32,6 +32,8 @@ const UNITS = [
   "loaf",
 ];
 
+const COUNTABLE_UNITS = ["pc", "can", "bottle", "bag", "box", "loaf"];
+
 const AddItemScreen = () => {
   const router = useRouter();
   const { session } = useAuth();
@@ -46,14 +48,14 @@ const AddItemScreen = () => {
     manualItemId: string;
   }>();
 
-  const [name, setName] = useState(prefilledName ?? "");
-  const [unit, setUnit] = useState("pcs");
-  const [store, setStore] = useState(prefilledStore ?? activeStore ?? "");
+  const [unit, setUnit] = useState("pc");
   const [quantity, setQuantity] = useState("1");
   const [loading, setLoading] = useState(false);
   const [threshold, setThreshold] = useState("1");
-  const [priceMode, setPriceMode] = useState<"per_unit" | "total">("per_unit");
   const [priceInput, setPriceInput] = useState("");
+  const [name, setName] = useState(prefilledName ?? "");
+  const [store, setStore] = useState(prefilledStore ?? activeStore ?? "");
+  const [priceMode, setPriceMode] = useState<"per_unit" | "total">("per_unit");
   const [errors, setErrors] = useState({
     name: "",
     quantity: "",
@@ -68,15 +70,6 @@ const AddItemScreen = () => {
     priceMode === "per_unit" ? parsedPrice : parsedPrice / parsedQty;
   const totalValue =
     priceMode === "total" ? parsedPrice : parsedPrice * parsedQty;
-
-  const calculateStatus = (
-    qty: number,
-    thresh: number,
-  ): "ok" | "low" | "out" => {
-    if (qty <= 0) return "out";
-    if (qty <= thresh) return "low";
-    return "ok";
-  };
 
   const handleAddItem = async () => {
     const newErrors = { name: "", quantity: "", form: "" };
@@ -139,7 +132,6 @@ const AddItemScreen = () => {
       }
 
       const parsedThreshold = parseFloat(threshold) || 1;
-      const status = calculateStatus(parsedQty, parsedThreshold);
 
       const { error: itemError } = await supabase.from("items").insert({
         inventory_id: inventoryId,
@@ -147,7 +139,6 @@ const AddItemScreen = () => {
         quantity: parsedQty,
         unit: unit,
         low_stock_threshold: parsedThreshold,
-        status,
         store: store.trim() || null,
         price: finalPricePerUnit,
         total_value: finalTotalValue,
@@ -230,16 +221,7 @@ const AddItemScreen = () => {
                   setErrors((prev) => ({ ...prev, quantity: "" }));
                 }}
                 keyboardType={
-                  [
-                    "pcs",
-                    "cans",
-                    "bottles",
-                    "bags",
-                    "boxes",
-                    "loaves",
-                  ].includes(unit)
-                    ? "number-pad"
-                    : "decimal-pad"
+                  COUNTABLE_UNITS.includes(unit) ? "number-pad" : "decimal-pad"
                 }
               />
               {errors.quantity ? (
