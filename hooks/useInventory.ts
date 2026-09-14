@@ -84,38 +84,38 @@ export const useInventory = (): UseInventoryReturn => {
       const item = items.find((item) => item.id === itemId);
       if (!item) return;
 
-      const status =
-        newQuantity <= 0
-          ? "out"
-          : newQuantity <= item.low_stock_threshold
-            ? "low"
-            : "ok";
-
       setItems((prev) =>
         prev.map((prevItem) =>
           prevItem.id === itemId
-            ? { ...prevItem, quantity: newQuantity, status }
+            ? { ...prevItem, quantity: newQuantity }
             : prevItem,
         ),
       );
 
-      if (status === "out" && item.status !== "out") {
-        await sendOutOfStockNotification(item.name);
-      } else if (status === "low" && item.status !== "low") {
-        await sendLowStockNotification(
-          item.name,
-          newQuantity,
-          item.unit ?? "units",
-        );
-      }
-
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("items")
-        .update({ quantity: newQuantity, status })
-        .eq("id", itemId);
+        .update({ quantity: newQuantity })
+        .eq("id", itemId)
+        .select()
+        .single();
 
       if (error) {
         fetchItems();
+        return;
+      }
+
+      setItems((prev) =>
+        prev.map((prevItem) => (prevItem.id === itemId ? data : prevItem)),
+      );
+
+      if (data.status === "out" && item.status !== "out") {
+        await sendOutOfStockNotification(item.name);
+      } else if (data.status === "low" && item.status !== "low") {
+        await sendLowStockNotification(
+          item.name,
+          data.quantity,
+          item.unit ?? "units",
+        );
       }
     },
     [items, fetchItems],
