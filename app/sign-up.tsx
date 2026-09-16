@@ -12,7 +12,7 @@ import {
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { Colors, FontSize, Spacing, BorderRadius } from "../constants/theme";
-import { passwordRegex, passwordRequirementMessage } from "@/lib/validation";
+import { passwordRegex, passwordRequirementMessage } from "@/lib/utils";
 
 type FormErrors = {
   fullName: string;
