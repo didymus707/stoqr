@@ -7,11 +7,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "stoqr",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#4F46E5"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.didymus.stoqr",
@@ -38,12 +33,17 @@
           "color": "#4F46E5",
           "sounds": []
         }
+      ],
+      "expo-status-bar",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#4F46E5"
+        }
       ]
     ],
-    "notification": {
-      "icon": "./assets/icon.png",
-      "color": "#4F46E5"
-    },
     "extra": {
       "router": {},
       "eas": {
