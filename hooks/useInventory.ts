@@ -100,6 +100,7 @@ export const useInventory = (): UseInventoryReturn => {
         .single();
 
       if (error) {
+        console.error("updateQuantity failed:", error);
         fetchItems();
         return;
       }
