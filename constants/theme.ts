@@ -13,14 +13,35 @@ export const Colors = {
     warning: "#D97706",
     danger: "#DC2626",
   },
+  light: {
+    surface: "#F3F0E8",
+    surfaceRaised: "#FFFFFF",
+    surfaceSunken: "#F3F0E8",
+    line: "#E2DDD2",
+    ink: "#17171B",
+    inkMuted: "#5E5B55",
+    accent: "#C2410C",
+    onAccent: "#FFFFFF",
+    accentSoft: "#FBE3D6",
+    accentText: "#9A3412",
+    ok: "#2F5D34",
+    okSoft: "#E3EEDF",
+    inverse: "#17171B",
+    onInverse: "#FFFFFF",
+  },
+  dark: {
+    surface: "#161614",
+    surfaceRaised: "#201F1C",
+    surfaceSunken: "#2A2925",
+  },
 };
 
 export const FontSize = {
-  xs: 11,
-  sm: 13,
-  md: 15,
-  lg: 18,
-  xl: 22,
+  xs: 8,
+  sm: 12,
+  md: 16,
+  lg: 20,
+  xl: 24,
   xxl: 28,
 };
 
@@ -38,4 +59,11 @@ export const BorderRadius = {
   md: 8,
   lg: 16,
   full: 999,
+};
+
+export const Fonts = {
+  display: "BricolageGrotesque-ExtraBold",
+  body: "IBMPlexSans-Regular",
+  bodySemi: "IBMPlexSans-SemiBold",
+  mono: "IBMPlexMono-Medium",
 };
