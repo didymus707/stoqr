@@ -18,8 +18,6 @@ type UseShoppingListReturn = {
   addManualItem: (name: string) => void;
   removeManualItem: (id: string) => void;
   toggleManualItem: (id: string) => void;
-  restockItem: (item: Item) => Promise<void>;
-  // restockItem: (item: Item, restockedQuantity: number) => Promise<void>;
 };
 
 export function useShoppingList(): UseShoppingListReturn {
@@ -96,30 +94,6 @@ export function useShoppingList(): UseShoppingListReturn {
     );
   }
 
-  async function restockItem(item: Item) {
-  // async function restockItem(item: Item, restockedQuantity: number) {
-    const newQuantity = item.quantity + restockedQuantity;
-
-    const { data, error } = await supabase
-      .from("items")
-      .update({
-        quantity: newQuantity,
-      })
-      .eq("id", item.id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    // set low stock based on if item is above its set threshold
-    setLowStockItems((prev) =>
-      data.status === "ok"
-        ? prev.filter((i) => i.id !== item.id)
-        : // if its not, replace with the returned data based on finding the item
-          prev.map((i) => (i.id === item.id ? data : i)),
-    );
-  }
-
   return {
     lowStockItems,
     manualItems,
@@ -128,6 +102,5 @@ export function useShoppingList(): UseShoppingListReturn {
     addManualItem,
     removeManualItem,
     toggleManualItem,
-    restockItem,
   };
 }
