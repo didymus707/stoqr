@@ -1,4 +1,3 @@
-import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { Colors, Fonts, BorderRadius, FontSize } from "@/constants/theme";
 import { Pressable, StyleSheet, Text } from "react-native";
 
@@ -42,10 +41,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   primary: { backgroundColor: c.accent },
-  secondary: {backgroundColor: c.ink},
-  disabled: {backgroundColor: c.line},
-  disabledLabel: {backgroundColor: c.inkMuted},
-  label: {fontFamily: Fonts.bodySemi, fontSize: FontSize.md},
-  onAccent: {color: c.onAccent},
-  onInverse: {color: c.onInverse},
+  secondary: { backgroundColor: c.ink },
+  disabled: { backgroundColor: c.line },
+  disabledLabel: { backgroundColor: c.inkMuted },
+  label: { fontFamily: Fonts.bodySemi, fontSize: FontSize.md },
+  onAccent: { color: c.onAccent },
+  onInverse: { color: c.onInverse },
 });
