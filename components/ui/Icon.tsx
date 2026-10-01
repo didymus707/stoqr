@@ -1,9 +1,9 @@
 import { Colors } from "@/constants/theme";
-import Svg, { Circle, Path, Rect } from "react-native-svg";
+import Svg, { Circle, G, Path, Rect } from "react-native-svg";
 
 const ICONS = {
   home: <Path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />,
-  upboard: (
+  cupboard: (
     <>
       <Rect x={3} y={3} width={7} height={7} rx={1.5} />
       <Rect x={14} y={3} width={7} height={7} rx={1.5} />
@@ -83,18 +83,17 @@ export const Icon = ({
   name,
   size = 24,
   color = Colors.light.ink,
-  strokeWidth,
+  strokeWidth = 1.8,
 }: Props) => (
-  <Svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth={strokeWidth}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    {ICONS[name]}
+  <Svg width={size} height={size} viewBox="0 0 24 24">
+    <G
+      fill="none"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {ICONS[name]}
+    </G>
   </Svg>
 );
