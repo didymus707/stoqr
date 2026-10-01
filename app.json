@@ -38,7 +38,8 @@
           "color": "#4F46E5",
           "sounds": []
         }
-      ]
+      ],
+      "expo-font"
     ],
     "notification": {
       "icon": "./assets/stoqr-brand/icon.png",
