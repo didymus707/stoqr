@@ -55,19 +55,24 @@ export const FontSize = {
 };
 
 export const Spacing = {
-  xs: 4,
-  sm: 8,
-  md: 16,
+  s4: 4,
+  s8: 8,
+  s12: 12,
+  s16: 16,
+  s20: 20,                                                   
   lg: 24,
   xl: 32,
   xxl: 48,
 };
 
-export const BorderRadius = {
+export const Radius = {
   sm: 4,
   md: 8,
-  lg: 16,
-  full: 999,
+  control: 12,
+  button: 16,
+  card: 20,
+  hero:24,
+  pill: 999,
 };
 
 export const Fonts = {

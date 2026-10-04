@@ -14,7 +14,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useShoppingList } from "@/hooks/useShoppingList";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useActionSheet } from "@expo/react-native-action-sheet";
-import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
+import { Colors, FontSize, Spacing, Radius } from "@/constants/theme";
 import { useShoppingSession } from "@/stores/shopping-session";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -35,6 +35,9 @@ export default function ShoppingListScreen() {
     useShoppingSession();
   const [showCustomStore, setShowCustomStore] = useState<boolean>(false);
   const [dismissedLowStock, setDismissedLowStock] = useState<Set<string>>(
+    new Set(),
+  );
+  const [lastItemRemoved, setLastItemRemoved] = useState<Set<string>>(
     new Set(),
   );
 
@@ -385,8 +388,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    gap: Spacing.sm,
+    paddingVertical: Spacing.s12,
+    gap: Spacing.s8,
   },
   title: {
     fontSize: FontSize.xxl,
@@ -395,7 +398,7 @@ const styles = StyleSheet.create({
   },
   badge: {
     backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.full,
+    borderRadius: Radius.pill,
     width: 24,
     height: 24,
     alignItems: "center",
@@ -409,14 +412,14 @@ const styles = StyleSheet.create({
   addContainer: {
     flexDirection: "row",
     paddingHorizontal: Spacing.lg,
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
+    gap: Spacing.s8,
+    marginBottom: Spacing.s12,
   },
   addInput: {
     flex: 1,
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
+    borderRadius: Radius.md,
+    padding: Spacing.s12,
     fontSize: FontSize.md,
     color: Colors.text.primary,
     borderWidth: 1,
@@ -424,7 +427,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.md,
+    borderRadius: Radius.md,
     paddingHorizontal: Spacing.lg,
     alignItems: "center",
     justifyContent: "center",
@@ -447,20 +450,20 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
     textTransform: "uppercase",
     letterSpacing: 0.5,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.s8,
   },
   itemRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.s12,
     borderBottomWidth: 0.5,
     borderBottomColor: Colors.border,
-    gap: Spacing.sm,
+    gap: Spacing.s8,
   },
   statusDot: {
     width: 8,
     height: 8,
-    borderRadius: BorderRadius.full,
+    borderRadius: Radius.pill,
   },
   itemInfo: {
     flex: 1,
@@ -487,7 +490,7 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 24,
     height: 24,
-    borderRadius: BorderRadius.sm,
+    borderRadius: Radius.sm,
     borderWidth: 1.5,
     borderColor: Colors.border,
     alignItems: "center",
@@ -505,13 +508,13 @@ const styles = StyleSheet.create({
   removeText: {
     fontSize: FontSize.sm,
     color: Colors.text.muted,
-    padding: Spacing.xs,
+    padding: Spacing.s4,
   },
   centeredContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: Spacing.sm,
+    gap: Spacing.s8,
   },
   emptyEmoji: {
     fontSize: 40,
@@ -537,8 +540,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     backgroundColor: Colors.primary + "15",
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    marginBottom: Spacing.sm,
+    paddingVertical: Spacing.s8,
+    marginBottom: Spacing.s8,
   },
   storeBannerText: {
     fontSize: FontSize.sm,
@@ -551,9 +554,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   sessionButton: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.s12,
+    paddingVertical: Spacing.s8,
+    borderRadius: Radius.pill,
     borderWidth: 1,
     borderColor: Colors.border,
     backgroundColor: Colors.surface,
@@ -567,8 +570,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    gap: Spacing.sm,
+    paddingVertical: Spacing.s8,
+    gap: Spacing.s8,
     backgroundColor: Colors.surface,
     borderBottomWidth: 0.5,
     borderBottomColor: Colors.border,
@@ -576,8 +579,8 @@ const styles = StyleSheet.create({
   customStoreInput: {
     flex: 1,
     backgroundColor: Colors.background,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
+    borderRadius: Radius.md,
+    padding: Spacing.s8,
     fontSize: FontSize.sm,
     color: Colors.text.primary,
     borderWidth: 1,
@@ -585,9 +588,9 @@ const styles = StyleSheet.create({
   },
   customStoreButton: {
     backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.s12,
+    paddingVertical: Spacing.s8,
   },
   customStoreButtonText: {
     color: "#ffffff",
@@ -599,10 +602,10 @@ const styles = StyleSheet.create({
   },
   restockAllButton: {
     backgroundColor: Colors.status.success,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.full,
+    padding: Spacing.s12,
+    borderRadius: Radius.pill,
     alignItems: "center",
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.s12,
   },
   restockAllText: {
     color: "#ffffff",

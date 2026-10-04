@@ -1,4 +1,4 @@
-import { Colors, Fonts, BorderRadius, FontSize } from "@/constants/theme";
+import { Colors, Fonts, Radius, FontSize } from "@/constants/theme";
 import {
   Pressable,
   PressableProps,
@@ -59,7 +59,7 @@ export const Button = ({
 const styles = StyleSheet.create({
   base: {
     height: 56,
-    borderRadius: BorderRadius.lg,
+    borderRadius: Radius.lg,
     alignItems: "center",
     justifyContent: "center",
   },

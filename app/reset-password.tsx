@@ -1,4 +1,4 @@
-import { BorderRadius, Colors, FontSize, Spacing } from "@/constants/theme";
+import { Radius, Colors, FontSize, Spacing } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
 import { passwordRegex, passwordRequirementMessage } from "@/lib/utils";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -116,8 +116,8 @@ export default function ResetPassword() {
           onPress={() => router.replace("/forgot-password")}
           style={{
             backgroundColor: Colors.primary,
-            borderRadius: BorderRadius.md,
-            paddingVertical: Spacing.md,
+            borderRadius: Radius.md,
+            paddingVertical: Spacing.s12,
             paddingHorizontal: Spacing.lg,
           }}
         >
@@ -146,7 +146,7 @@ export default function ResetPassword() {
           fontSize: FontSize.xl,
           fontWeight: "600",
           color: Colors.text.primary,
-          marginBottom: Spacing.sm,
+          marginBottom: Spacing.s8,
         }}
       >
         Set a new password
@@ -175,14 +175,14 @@ export default function ResetPassword() {
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         autoCapitalize="none"
-        style={[inputStyle, { marginTop: Spacing.sm }]}
+        style={[inputStyle, { marginTop: Spacing.s8 }]}
       />
 
       {formError && (
         <Text
           style={{
             color: Colors.status.danger,
-            marginTop: Spacing.sm,
+            marginTop: Spacing.s8,
             fontSize: FontSize.sm,
           }}
         >
@@ -195,8 +195,8 @@ export default function ResetPassword() {
         disabled={submitting}
         style={{
           backgroundColor: Colors.primary,
-          borderRadius: BorderRadius.md,
-          paddingVertical: Spacing.md,
+          borderRadius: Radius.md,
+          paddingVertical: Spacing.s12,
           alignItems: "center",
           marginTop: Spacing.lg,
           opacity: submitting ? 0.6 : 1,
@@ -215,8 +215,8 @@ export default function ResetPassword() {
 const inputStyle = {
   borderWidth: 1,
   borderColor: Colors.border,
-  borderRadius: BorderRadius.md,
-  padding: Spacing.md,
+  borderRadius: Radius.md,
+  padding: Spacing.s12,
   fontSize: FontSize.md,
   color: Colors.text.primary,
   backgroundColor: Colors.surface,

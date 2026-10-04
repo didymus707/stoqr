@@ -14,7 +14,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { useActionSheet } from "@expo/react-native-action-sheet";
-import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
+import { Colors, FontSize, Spacing, Radius } from "@/constants/theme";
 import BudgetSnapshot from "@/components/features/BudgetSnapshot";
 
 export default function HomeScreen() {
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 44,
     height: 44,
-    borderRadius: BorderRadius.full,
+    borderRadius: Radius.pill,
     backgroundColor: Colors.primary,
     alignItems: "center",
     justifyContent: "center",
@@ -279,14 +279,14 @@ const styles = StyleSheet.create({
   },
   summaryRow: {
     flexDirection: "row",
-    gap: Spacing.sm,
+    gap: Spacing.s8,
     marginBottom: Spacing.lg,
   },
   summaryCard: {
     flex: 1,
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
+    borderRadius: Radius.md,
+    padding: Spacing.s12,
     alignItems: "center",
   },
   summaryValue: {
@@ -296,23 +296,23 @@ const styles = StyleSheet.create({
   summaryLabel: {
     fontSize: FontSize.xs,
     color: Colors.text.secondary,
-    marginTop: Spacing.xs,
+    marginTop: Spacing.s4,
     textAlign: "center",
   },
   sectionTitle: {
     fontSize: FontSize.lg,
     fontWeight: "600",
     color: Colors.text.primary,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.s12,
   },
   inventoryItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.sm,
+    borderRadius: Radius.md,
+    padding: Spacing.s12,
+    marginBottom: Spacing.s8,
   },
   itemLeft: {
     flex: 1,
@@ -325,16 +325,16 @@ const styles = StyleSheet.create({
   itemQuantity: {
     fontSize: FontSize.sm,
     color: Colors.text.secondary,
-    marginTop: Spacing.xs,
+    marginTop: Spacing.s4,
   },
   itemRight: {
     alignItems: "flex-end",
-    gap: Spacing.xs,
+    gap: Spacing.s4,
   },
   statusBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.s8,
+    paddingVertical: Spacing.s4,
+    borderRadius: Radius.pill,
   },
   statusText: {
     fontSize: FontSize.xs,
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: "center",
     paddingVertical: Spacing.xxl,
-    gap: Spacing.sm,
+    gap: Spacing.s8,
   },
   emptyEmoji: {
     fontSize: 48,
@@ -366,9 +366,9 @@ const styles = StyleSheet.create({
   addButton: {
     backgroundColor: Colors.primary,
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-    marginTop: Spacing.sm,
+    paddingVertical: Spacing.s8,
+    borderRadius: Radius.pill,
+    marginTop: Spacing.s8,
   },
   addButtonText: {
     color: "#FFFFFF",
@@ -377,18 +377,18 @@ const styles = StyleSheet.create({
   },
   skeletonBlock: {
     backgroundColor: "#E0E0E0",
-    borderRadius: BorderRadius.md,
+    borderRadius: Radius.md,
   },
   errorText: {
     fontSize: FontSize.md,
     color: Colors.text.secondary,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.s12,
   },
   retryButton: {
     backgroundColor: Colors.primary,
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
+    paddingVertical: Spacing.s8,
+    borderRadius: Radius.pill,
   },
   retryText: {
     color: "#FFFFFF",
@@ -397,12 +397,12 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.sm,
+    gap: Spacing.s8,
   },
   headerAddButton: {
     width: 44,
     height: 44,
-    borderRadius: BorderRadius.full,
+    borderRadius: Radius.pill,
     backgroundColor: Colors.surface,
     borderWidth: 1,
     borderColor: Colors.border,

@@ -8,7 +8,7 @@ import {
 import { useEffect } from "react";
 import { useAuth } from "@/stores/auth";
 import { useRouter } from "expo-router";
-import { Colors, FontSize, Spacing, BorderRadius } from "../constants/theme";
+import { Colors, FontSize, Spacing, Radius } from "../constants/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function WelcomeScreen() {
@@ -105,11 +105,11 @@ const styles = StyleSheet.create({
   logoContainer: {
     width: 80,
     height: 80,
-    borderRadius: BorderRadius.lg,
+    borderRadius: Radius.lg,
     backgroundColor: Colors.surface,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.s12,
   },
   logoEmoji: {
     fontSize: 40,
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xxl,
     fontWeight: "700",
     color: Colors.text.primary,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.s8,
   },
   tagline: {
     fontSize: FontSize.md,
@@ -126,15 +126,15 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   features: {
-    gap: Spacing.md,
+    gap: Spacing.s12,
   },
   featureRow: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.surface,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.md,
-    gap: Spacing.md,
+    padding: Spacing.s12,
+    borderRadius: Radius.md,
+    gap: Spacing.s12,
   },
   featureEmoji: {
     fontSize: 24,
@@ -145,12 +145,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   actions: {
-    gap: Spacing.sm,
+    gap: Spacing.s8,
   },
   primaryButton: {
     backgroundColor: Colors.primary,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.full,
+    padding: Spacing.s12,
+    borderRadius: Radius.pill,
     alignItems: "center",
   },
   primaryButtonText: {
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   secondaryButton: {
-    padding: Spacing.md,
+    padding: Spacing.s12,
     alignItems: "center",
   },
   secondaryButtonText: {

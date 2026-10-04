@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
-import { Colors, FontSize, Spacing, BorderRadius } from "../constants/theme";
+import { Colors, FontSize, Spacing, Radius } from "../constants/theme";
 import { passwordRegex, passwordRequirementMessage } from "@/lib/utils";
 
 type FormErrors = {
@@ -265,17 +265,17 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xxl,
     fontWeight: "700",
     color: Colors.text.primary,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.s4,
   },
   subtitle: {
     fontSize: FontSize.md,
     color: Colors.text.secondary,
   },
   form: {
-    gap: Spacing.md,
+    gap: Spacing.s12,
   },
   inputGroup: {
-    gap: Spacing.xs,
+    gap: Spacing.s4,
   },
   label: {
     fontSize: FontSize.sm,
@@ -284,8 +284,8 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
+    borderRadius: Radius.md,
+    padding: Spacing.s12,
     fontSize: FontSize.md,
     color: Colors.text.primary,
     borderWidth: 1,
@@ -293,10 +293,10 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: Colors.primary,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.full,
+    padding: Spacing.s12,
+    borderRadius: Radius.pill,
     alignItems: "center",
-    marginTop: Spacing.sm,
+    marginTop: Spacing.s8,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   },
   linkButton: {
     alignItems: "center",
-    padding: Spacing.sm,
+    padding: Spacing.s8,
   },
   linkText: {
     fontSize: FontSize.sm,

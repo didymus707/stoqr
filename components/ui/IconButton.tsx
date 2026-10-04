@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet } from "react-native";
 import { Icon, IconName } from "./Icon";
-import { BorderRadius, Colors } from "@/constants/theme";
+import { Radius, Colors } from "@/constants/theme";
 
-const c = Colors.light
+const c = Colors.light;
 
 type Props = {
   label: string;
@@ -31,7 +31,12 @@ export const IconButton = ({
         pressed && { opacity: 0.7 },
       ]}
     >
-      <Icon name={icon} size={22} strokeWidth={2} color={inverse ? c.onInverse : c.ink} />
+      <Icon
+        name={icon}
+        size={22}
+        strokeWidth={2}
+        color={inverse ? c.onInverse : c.ink}
+      />
     </Pressable>
   );
 };
@@ -40,7 +45,7 @@ const styles = StyleSheet.create({
   base: {
     width: 44,
     height: 44,
-    borderRadius: BorderRadius.full,
+    borderRadius: Radius.pill,
     alignItems: "center",
     justifyContent: "center",
   },
