@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
     paddingVertical: Spacing.s12,
   },
   title: {
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     fontWeight: "300",
   },
   searchContainer: {
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
     marginBottom: Spacing.s8,
   },
   searchInput: {
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
   },
   filterRow: {
     flexDirection: "row",
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
     gap: Spacing.s4,
     marginBottom: Spacing.s12,
   },
@@ -333,8 +333,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingHorizontal: Spacing.s24,
+    paddingBottom: Spacing.s48,
   },
   itemRow: {
     flexDirection: "row",

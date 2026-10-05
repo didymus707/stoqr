@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
     paddingVertical: Spacing.s12,
     borderBottomWidth: 0.5,
     borderBottomColor: Colors.border,
@@ -235,11 +235,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   content: {
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.s48,
   },
   avatarContainer: {
     alignItems: "center",
-    paddingVertical: Spacing.xl,
+    paddingVertical: Spacing.s32,
     gap: Spacing.s8,
   },
   avatar: {
@@ -260,8 +260,8 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
   },
   section: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
+    paddingTop: Spacing.s24,
     gap: Spacing.s12,
   },
   sectionTitle: {
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.status.danger,
     marginTop: Spacing.s4,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
   },
   dangerButton: {
     padding: Spacing.s12,

@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 0.5,
     borderTopColor: Colors.border,
     padding: Spacing.s12,
-    gap: Spacing.lg,
+    gap: Spacing.s24,
   },
   section: {
     gap: Spacing.s8,

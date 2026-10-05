@@ -284,7 +284,7 @@ export default function ShoppingListScreen() {
 
           {manualItems.length > 0 && (
             <View
-              style={{ marginTop: lowStockItems.length > 0 ? Spacing.lg : 0 }}
+              style={{ marginTop: lowStockItems.length > 0 ? Spacing.s24 : 0 }}
             >
               <Text style={styles.sectionTitle}>
                 My list ({manualItems.length})
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
     paddingVertical: Spacing.s12,
     gap: Spacing.s8,
   },
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
   },
   addContainer: {
     flexDirection: "row",
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
     gap: Spacing.s8,
     marginBottom: Spacing.s12,
   },
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
   addButton: {
     backgroundColor: Colors.primary,
     borderRadius: Radius.md,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -441,8 +441,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingHorizontal: Spacing.s24,
+    paddingBottom: Spacing.s48,
   },
   sectionTitle: {
     fontSize: FontSize.sm,
@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: Colors.primary + "15",
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
     paddingVertical: Spacing.s8,
     marginBottom: Spacing.s8,
   },
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
   customStoreContainer: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
     paddingVertical: Spacing.s8,
     gap: Spacing.s8,
     backgroundColor: Colors.surface,

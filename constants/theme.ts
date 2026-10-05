@@ -60,9 +60,13 @@ export const Spacing = {
   s12: 12,
   s16: 16,
   s20: 20,                                                   
-  lg: 24,
-  xl: 32,
-  xxl: 48,
+  s24: 24,
+  s28: 28,
+  s32: 32,
+  s36: 36,
+  s40: 40,
+  s44: 44,
+  s48: 48,
 };
 
 export const Radius = {

@@ -140,18 +140,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xxl,
+    paddingHorizontal: Spacing.s24,
+    paddingTop: Spacing.s48,
   },
   backButton: {
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.s24,
   },
   backText: {
     fontSize: FontSize.md,
     color: Colors.primary,
   },
   header: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.s32,
   },
   title: {
     fontSize: FontSize.xxl,

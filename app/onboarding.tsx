@@ -113,9 +113,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xxl,
-    paddingBottom: Spacing.xl,
+    paddingHorizontal: Spacing.s24,
+    paddingTop: Spacing.s48,
+    paddingBottom: Spacing.s32,
   },
   skipButton: {
     alignSelf: "flex-end",
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: Spacing.lg,
+    gap: Spacing.s24,
   },
   emojiContainer: {
     width: 120,
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.s12,
   },
   footer: {
-    gap: Spacing.lg,
+    gap: Spacing.s24,
   },
   dots: {
     flexDirection: "row",

@@ -94,13 +94,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
     justifyContent: "space-between",
-    paddingVertical: Spacing.xxl,
+    paddingVertical: Spacing.s48,
   },
   hero: {
     alignItems: "center",
-    marginTop: Spacing.xxl,
+    marginTop: Spacing.s48,
   },
   logoContainer: {
     width: 80,

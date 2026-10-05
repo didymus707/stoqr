@@ -99,7 +99,7 @@ export default function ResetPassword() {
           justifyContent: "center",
           alignItems: "center",
           backgroundColor: Colors.background,
-          padding: Spacing.lg,
+          padding: Spacing.s24,
         }}
       >
         <Text
@@ -107,7 +107,7 @@ export default function ResetPassword() {
             fontSize: FontSize.md,
             color: Colors.status.danger,
             textAlign: "center",
-            marginBottom: Spacing.lg,
+            marginBottom: Spacing.s24,
           }}
         >
           {exchangeError}
@@ -118,7 +118,7 @@ export default function ResetPassword() {
             backgroundColor: Colors.primary,
             borderRadius: Radius.md,
             paddingVertical: Spacing.s12,
-            paddingHorizontal: Spacing.lg,
+            paddingHorizontal: Spacing.s24,
           }}
         >
           <Text
@@ -137,7 +137,7 @@ export default function ResetPassword() {
       style={{
         flex: 1,
         backgroundColor: Colors.background,
-        padding: Spacing.lg,
+        padding: Spacing.s24,
         justifyContent: "center",
       }}
     >
@@ -155,7 +155,7 @@ export default function ResetPassword() {
         style={{
           fontSize: FontSize.md,
           color: Colors.text.secondary,
-          marginBottom: Spacing.lg,
+          marginBottom: Spacing.s24,
         }}
       >
         Choose a new password for your account.
@@ -198,7 +198,7 @@ export default function ResetPassword() {
           borderRadius: Radius.md,
           paddingVertical: Spacing.s12,
           alignItems: "center",
-          marginTop: Spacing.lg,
+          marginTop: Spacing.s24,
           opacity: submitting ? 0.6 : 1,
         }}
       >

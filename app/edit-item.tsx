@@ -326,13 +326,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   content: {
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.s48,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
     paddingVertical: Spacing.s12,
     borderBottomWidth: 0.5,
     borderBottomColor: Colors.border,
@@ -352,8 +352,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   section: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
+    paddingTop: Spacing.s24,
     gap: Spacing.s12,
   },
   sectionTitle: {

@@ -238,8 +238,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   content: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    padding: Spacing.s24,
+    paddingBottom: Spacing.s48,
     flexGrow: 1,
   },
   centeredContainer: {
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.s24,
   },
   greeting: {
     fontSize: FontSize.md,
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   summaryRow: {
     flexDirection: "row",
     gap: Spacing.s8,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.s24,
   },
   summaryCard: {
     flex: 1,
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     alignItems: "center",
-    paddingVertical: Spacing.xxl,
+    paddingVertical: Spacing.s48,
     gap: Spacing.s8,
   },
   emptyEmoji: {
@@ -361,11 +361,11 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.text.secondary,
     textAlign: "center",
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
   },
   addButton: {
     backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
     paddingVertical: Spacing.s8,
     borderRadius: Radius.pill,
     marginTop: Spacing.s8,
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
   },
   retryButton: {
     backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
     paddingVertical: Spacing.s8,
     borderRadius: Radius.pill,
   },

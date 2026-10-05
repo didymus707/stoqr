@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   header: {
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
     paddingTop: Spacing.s12,
     paddingBottom: Spacing.s8,
   },
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     flexDirection: "row",
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
     gap: Spacing.s8,
     marginBottom: Spacing.s12,
   },
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   searchButton: {
     backgroundColor: Colors.primary,
     borderRadius: Radius.md,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -239,15 +239,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   resultsContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingHorizontal: Spacing.s24,
+    paddingBottom: Spacing.s48,
     flexGrow: 1,
   },
   centeredContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: Spacing.xxl,
+    paddingTop: Spacing.s48,
     gap: Spacing.s8,
   },
   emptyEmoji: {
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.s24,
     paddingVertical: Spacing.s8,
     borderRadius: Radius.pill,
     marginTop: Spacing.s8,
