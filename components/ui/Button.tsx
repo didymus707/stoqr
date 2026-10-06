@@ -1,4 +1,11 @@
-import { Colors, Fonts, Radius, FontSize } from "@/constants/theme";
+import {
+  Colors,
+  Fonts,
+  Radius,
+  FontSize,
+  Spacing,
+  Type,
+} from "@/constants/theme";
 import {
   Pressable,
   PressableProps,
@@ -59,22 +66,23 @@ export const Button = ({
 const styles = StyleSheet.create({
   base: {
     height: 56,
-    borderRadius: Radius.lg,
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: Radius.button,
+    paddingHorizontal: Spacing.s20,
   },
-  primary: { backgroundColor: c.accent },
-  secondary: { backgroundColor: c.ink },
-  disabled: { backgroundColor: c.line },
-  disabledLabel: { backgroundColor: c.inkMuted },
-  label: { fontFamily: Fonts.bodySemi, fontSize: FontSize.md },
+  pressed: { opacity: 0.85 },
   onAccent: { color: c.onAccent },
   onInverse: { color: c.onInverse },
-  split: { flexDirection: "row", justifyContent: "space-between" },
+  disabledLabel: { color: c.inkMuted },
+  disabled: { backgroundColor: c.line },
+  primary: { backgroundColor: c.accent },
+  secondary: { backgroundColor: c.inverse },
   value: {
     fontFamily: Fonts.mono,
     fontSize: FontSize.md,
     fontVariant: ["tabular-nums"],
   },
-  pressed: { opacity: 0.85 },
+  label: { ...Type.button },
+  split: { flexDirection: "row", justifyContent: "space-between" },
 });

@@ -59,7 +59,7 @@ export const Spacing = {
   s8: 8,
   s12: 12,
   s16: 16,
-  s20: 20,                                                   
+  s20: 20,
   s24: 24,
   s28: 28,
   s32: 32,
@@ -75,7 +75,7 @@ export const Radius = {
   control: 12,
   button: 16,
   card: 20,
-  hero:24,
+  hero: 24,
   pill: 999,
 };
 
@@ -135,4 +135,5 @@ export const Type = {
   caption: { fontFamily: Fonts.body, fontSize: 12, lineHeight: 16 },
   price: { fontFamily: Fonts.mono, fontSize: 15, lineHeight: 20 },
   code: { fontFamily: Fonts.mono, fontSize: 12, lineHeight: 16 },
+  button: { fontFamily: Fonts.bodySemi, fontSize: 17, lineHeight: 24 },
 };
