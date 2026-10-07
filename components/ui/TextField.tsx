@@ -1,7 +1,14 @@
 import { Icon, IconName } from "./Icon";
 import { Colors, Fonts, Radius } from "@/constants/theme";
 import { useState } from "react";
-import { StyleProp, TextInputProps, View, ViewStyle } from "react-native";
+import {
+  StyleProp,
+  StyleSheet,
+  TextInput,
+  TextInputProps,
+  View,
+  ViewStyle,
+} from "react-native";
 import { Text } from "./Text";
 
 const c = Colors.light;
@@ -41,15 +48,28 @@ export const TextField = ({
     >
       {icon && <Icon name={icon} size={20} color={c.accent} />}
       {prefix && <Text variant="price">{prefix}</Text>}
+      <TextInput
+        {...rest}
+        placeholderTextColor={c.inkSubtle}
+        onFocus={(e) => {
+          setFocused(true);
+          onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setFocused(false);
+          onBlur?.(e);
+        }}
+        style={[styles.input, mono && styles.mono, style]}
+      />
     </View>
   );
 };
 
-const styles = {
+const styles = StyleSheet.create({
   box: {
     gap: 10,
     height: 52,
-    barderWidth: 1,
+    borderWidth: 1,
     flexDirection: "row",
     borderColor: c.line,
     alignItems: "center",
@@ -75,4 +95,4 @@ const styles = {
     color: c.ink,
   },
   mono: { fontFamily: Fonts.mono, fontSize: 15 },
-};
+});
