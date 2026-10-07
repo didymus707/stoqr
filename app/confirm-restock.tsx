@@ -152,7 +152,6 @@ const ConfirmRestock = () => {
   }, [store, items, formState]);
 
   const handleConfirmRestock = async () => {
-    console.log("I was called");
     if (!isFormValid) return;
     setIsSubmitting(true);
 

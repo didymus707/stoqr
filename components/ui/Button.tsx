@@ -21,7 +21,6 @@ const c = Colors.light;
 type Props = Omit<PressableProps, "style" | "children"> & {
   label: string;
   value?: string;
-  onPress: () => void;
   style?: StyleProp<ViewStyle>;
   variant?: "primary" | "secondary";
   labelStyle?: StyleProp<TextStyle>;
@@ -29,7 +28,6 @@ type Props = Omit<PressableProps, "style" | "children"> & {
 
 export const Button = ({
   label,
-  onPress,
   disabled,
   variant = "primary",
   value,
