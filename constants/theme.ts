@@ -73,10 +73,11 @@ export const Radius = {
   sm: 4,
   md: 8,
   control: 12,
+  field: 14,
   button: 16,
   card: 20,
   hero: 24,
-  pill: 999,
+  pill: 9999,
 };
 
 export const Fonts = {
