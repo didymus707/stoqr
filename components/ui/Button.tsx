@@ -21,12 +21,14 @@ const c = Colors.light;
 type Props = Omit<PressableProps, "style" | "children"> & {
   label: string;
   value?: string;
+  size?: "sm" | "lg";
   style?: StyleProp<ViewStyle>;
-  variant?: "primary" | "secondary";
   labelStyle?: StyleProp<TextStyle>;
+  variant?: "primary" | "secondary" | "outline";
 };
 
 export const Button = ({
+  size,
   label,
   disabled,
   variant = "primary",
@@ -36,7 +38,11 @@ export const Button = ({
   ...rest
 }: Props) => {
   const textColor = [
-    variant === "primary" ? styles.onAccent : styles.onInverse,
+    variant === "primary"
+      ? styles.onAccent
+      : variant === "outline"
+        ? styles.onSurface
+        : styles.onInverse,
     disabled && styles.disabledLabel,
   ];
   return (
@@ -48,6 +54,7 @@ export const Button = ({
       accessibilityLabel={value ? `${label} ${value}` : label}
       style={({ pressed }) => [
         styles.base,
+        size === "sm" && styles.sm,
         value != null && styles.split,
         styles[variant],
         pressed && !disabled && styles.pressed,
@@ -82,5 +89,8 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   label: { ...Type.button },
+  onSurface: { color: c.ink },
   split: { flexDirection: "row", justifyContent: "space-between" },
+  sm: { height: 40, paddingHorizontal: 14, borderRadius: Radius.control },
+  outline: { backgroundColor: c.surface, borderWidth: 1, borderColor: c.line },
 });
