@@ -25,7 +25,7 @@ export default function RootLayout() {
   }, [fontsLoaded, fontError]);
 
   return (
-    <GestureHandlerRootView>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ActionSheetProvider>
           <AuthProvider>
