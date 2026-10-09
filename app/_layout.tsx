@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import { AuthProvider } from "@/stores/auth";
@@ -5,7 +6,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ShoppingSessionProvider } from "@/stores/shopping-session";
 import { ActionSheetProvider } from "@expo/react-native-action-sheet";
-import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,14 +25,16 @@ export default function RootLayout() {
   }, [fontsLoaded, fontError]);
 
   return (
-    <SafeAreaProvider>
-      <ActionSheetProvider>
-        <AuthProvider>
-          <ShoppingSessionProvider>
-            <Stack screenOptions={{ headerShown: false }} />
-          </ShoppingSessionProvider>
-        </AuthProvider>
-      </ActionSheetProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView>
+      <SafeAreaProvider>
+        <ActionSheetProvider>
+          <AuthProvider>
+            <ShoppingSessionProvider>
+              <Stack screenOptions={{ headerShown: false }} />
+            </ShoppingSessionProvider>
+          </AuthProvider>
+        </ActionSheetProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
