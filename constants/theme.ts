@@ -137,4 +137,6 @@ export const Type = {
   price: { fontFamily: Fonts.mono, fontSize: 15, lineHeight: 20 },
   code: { fontFamily: Fonts.mono, fontSize: 12, lineHeight: 16 },
   button: { fontFamily: Fonts.bodySemi, fontSize: 17, lineHeight: 24 },
+  tab: { fontFamily: Fonts.bodyMedium, fontSize: 11, lineHeight: 14 },
+  pill: { fontFamily: Fonts.bodySemi, fontSize: 11, lineHeight: 16 },
 };

@@ -7,7 +7,7 @@ const c = Colors.light;
 export const Checkbox = ({ checked }: { checked: boolean }) => (
   <View style={[styles.box, checked && styles.checked]}>
     {checked ? (
-      <Icon name="check" size={16} strokeWidth={2.5} color={c.inverse} />
+      <Icon name="check" size={16} strokeWidth={2.5} color={c.onInverse} />
     ) : null}
   </View>
 );
