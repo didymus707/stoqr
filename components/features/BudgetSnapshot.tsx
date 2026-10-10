@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useBudget } from "@/hooks/useBudget";
-import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
+import { Colors, FontSize, Spacing, Radius } from "@/constants/theme";
 
 export default function BudgetSnapshot() {
   const { budget, loading, error } = useBudget();
@@ -117,22 +117,22 @@ export default function BudgetSnapshot() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
+    borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: Colors.border,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.s12,
     overflow: "hidden",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: Spacing.md,
+    padding: Spacing.s12,
   },
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.sm,
+    gap: Spacing.s8,
   },
   headerEmoji: {
     fontSize: 24,
@@ -163,11 +163,11 @@ const styles = StyleSheet.create({
   details: {
     borderTopWidth: 0.5,
     borderTopColor: Colors.border,
-    padding: Spacing.md,
-    gap: Spacing.lg,
+    padding: Spacing.s12,
+    gap: Spacing.s24,
   },
   section: {
-    gap: Spacing.sm,
+    gap: Spacing.s8,
   },
   sectionTitle: {
     fontSize: FontSize.xs,
@@ -175,12 +175,12 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
     textTransform: "uppercase",
     letterSpacing: 0.5,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.s4,
   },
   storeRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.sm,
+    gap: Spacing.s8,
   },
   storeName: {
     fontSize: FontSize.sm,
@@ -191,13 +191,13 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 8,
     backgroundColor: Colors.border,
-    borderRadius: BorderRadius.full,
+    borderRadius: Radius.pill,
     overflow: "hidden",
   },
   bar: {
     height: "100%",
     backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.full,
+    borderRadius: Radius.pill,
   },
   storeTotal: {
     fontSize: FontSize.sm,
@@ -209,15 +209,15 @@ const styles = StyleSheet.create({
   topItemRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.sm,
-    paddingVertical: Spacing.xs,
+    gap: Spacing.s8,
+    paddingVertical: Spacing.s4,
     borderBottomWidth: 0.5,
     borderBottomColor: Colors.border,
   },
   topItemRank: {
     width: 24,
     height: 24,
-    borderRadius: BorderRadius.full,
+    borderRadius: Radius.pill,
     backgroundColor: Colors.primary + "15",
     alignItems: "center",
     justifyContent: "center",
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
   },
   footer: {
-    paddingTop: Spacing.xs,
+    paddingTop: Spacing.s4,
   },
   footerText: {
     fontSize: FontSize.xs,

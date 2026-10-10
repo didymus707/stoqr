@@ -15,7 +15,7 @@ import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/stores/auth";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
+import { Colors, FontSize, Spacing, Radius } from "@/constants/theme";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -215,8 +215,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.s24,
+    paddingVertical: Spacing.s12,
     borderBottomWidth: 0.5,
     borderBottomColor: Colors.border,
   },
@@ -235,17 +235,17 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   content: {
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.s48,
   },
   avatarContainer: {
     alignItems: "center",
-    paddingVertical: Spacing.xl,
-    gap: Spacing.sm,
+    paddingVertical: Spacing.s32,
+    gap: Spacing.s8,
   },
   avatar: {
     width: 80,
     height: 80,
-    borderRadius: BorderRadius.full,
+    borderRadius: Radius.pill,
     backgroundColor: Colors.primary,
     alignItems: "center",
     justifyContent: "center",
@@ -260,9 +260,9 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
   },
   section: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    gap: Spacing.md,
+    paddingHorizontal: Spacing.s24,
+    paddingTop: Spacing.s24,
+    gap: Spacing.s12,
   },
   sectionTitle: {
     fontSize: FontSize.sm,
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   inputGroup: {
-    gap: Spacing.xs,
+    gap: Spacing.s4,
   },
   label: {
     fontSize: FontSize.sm,
@@ -281,8 +281,8 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
+    borderRadius: Radius.md,
+    padding: Spacing.s12,
     fontSize: FontSize.md,
     color: Colors.text.primary,
     borderWidth: 1,
@@ -295,12 +295,12 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: FontSize.xs,
     color: Colors.status.danger,
-    marginTop: Spacing.xs,
-    paddingHorizontal: Spacing.lg,
+    marginTop: Spacing.s4,
+    paddingHorizontal: Spacing.s24,
   },
   dangerButton: {
-    padding: Spacing.md,
-    borderRadius: BorderRadius.md,
+    padding: Spacing.s12,
+    borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: Colors.status.danger,
     alignItems: "center",

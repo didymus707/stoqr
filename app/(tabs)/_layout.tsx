@@ -2,11 +2,13 @@ import { useAuth } from "@/stores/auth";
 import { Tabs, Redirect } from "expo-router";
 import { Colors } from "../../constants/theme";
 import {
-  Text,
   View,
   ActivityIndicator,
   useWindowDimensions,
 } from "react-native";
+import { Icon } from "@/components/ui/Icon";
+
+const c = Colors.light;
 
 export default function TabLayout() {
   const { session, loading } = useAuth();
@@ -30,11 +32,11 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.text.muted,
+        tabBarActiveTintColor: c.ink,
+        tabBarInactiveTintColor: c.inkSubtle,
         tabBarStyle: {
-          backgroundColor: Colors.background,
-          borderTopColor: Colors.border,
+          backgroundColor: c.surfaceRaised,
+          borderTopColor: c.line,
           borderTopWidth: 0.5,
           paddingBottom: 0,
           paddingTop: isSmallScreen ? 4 : 8,
@@ -53,37 +55,38 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => <TabIcon emoji="🏠" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <Icon name="home" color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="inventory"
         options={{
           title: "Inventory",
-          tabBarIcon: ({ color }) => <TabIcon emoji="📦" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <Icon name="cupboard" color={color} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="scan"
+        name="shopping"
         options={{
-          title: "Shopping",
-          tabBarIcon: ({ color }) => <TabIcon emoji="🛒" color={color} />,
+          title: "List",
+          tabBarIcon: ({ color }) => (
+            <Icon name="list" color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="compare"
         options={{
           title: "Compare",
-          tabBarIcon: ({ color }) => <TabIcon emoji="💰" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <Icon name="budget" color={color} />
+          ),
         }}
       />
     </Tabs>
-  );
-}
-
-function TabIcon({ emoji, color }: { emoji: string; color: string }) {
-  const { width } = useWindowDimensions();
-  return (
-    <Text style={{ fontSize: width < 700 ? 18 : 20, color }}>{emoji}</Text>
   );
 }

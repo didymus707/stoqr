@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "@/lib/supabase";
-import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
+import { Colors, FontSize, Spacing, Radius } from "@/constants/theme";
 import { useRouter } from "expo-router";
 
 type PriceResult = {
@@ -56,9 +56,7 @@ export default function CompareScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Compare Prices</Text>
-        <Text style={styles.subtitle}>
-          Based on prices logged by S users
-        </Text>
+        <Text style={styles.subtitle}>Based on prices logged by S users</Text>
       </View>
 
       <View style={styles.searchContainer}>
@@ -192,9 +190,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   header: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.sm,
+    paddingHorizontal: Spacing.s24,
+    paddingTop: Spacing.s12,
+    paddingBottom: Spacing.s8,
   },
   title: {
     fontSize: FontSize.xxl,
@@ -208,15 +206,15 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     flexDirection: "row",
-    paddingHorizontal: Spacing.lg,
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.s24,
+    gap: Spacing.s8,
+    marginBottom: Spacing.s12,
   },
   searchInput: {
     flex: 1,
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
+    borderRadius: Radius.md,
+    padding: Spacing.s12,
     fontSize: FontSize.md,
     color: Colors.text.primary,
     borderWidth: 1,
@@ -224,8 +222,8 @@ const styles = StyleSheet.create({
   },
   searchButton: {
     backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.lg,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.s24,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -241,16 +239,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   resultsContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingHorizontal: Spacing.s24,
+    paddingBottom: Spacing.s48,
     flexGrow: 1,
   },
   centeredContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: Spacing.xxl,
-    gap: Spacing.sm,
+    paddingTop: Spacing.s48,
+    gap: Spacing.s8,
   },
   emptyEmoji: {
     fontSize: 40,
@@ -270,16 +268,16 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     fontWeight: "600",
     color: Colors.text.secondary,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.s12,
   },
   priceCard: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.sm,
+    borderRadius: Radius.md,
+    padding: Spacing.s12,
+    marginBottom: Spacing.s8,
     borderWidth: 1,
     borderColor: Colors.border,
   },
@@ -290,7 +288,7 @@ const styles = StyleSheet.create({
   priceCardLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.sm,
+    gap: Spacing.s8,
   },
   medal: {
     fontSize: 24,
@@ -325,7 +323,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.text.muted,
     textAlign: "center",
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.s12,
     lineHeight: 18,
   },
   errorText: {
@@ -335,10 +333,10 @@ const styles = StyleSheet.create({
   },
   addButton: {
     backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-    marginTop: Spacing.sm,
+    paddingHorizontal: Spacing.s24,
+    paddingVertical: Spacing.s8,
+    borderRadius: Radius.pill,
+    marginTop: Spacing.s8,
   },
   addButtonText: {
     color: "#ffffff",

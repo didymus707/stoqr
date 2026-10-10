@@ -4,9 +4,14 @@
     "slug": "stoqr",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/stoqr-brand/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "stoqr",
+    "splash": {
+      "image": "./assets/stoqr-brand/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#4F46E5"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.didymus.stoqr",
@@ -16,24 +21,30 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
+        "foregroundImage": "./assets/stoqr-brand/icon.png",
         "backgroundColor": "#4F46E5"
       },
       "package": "com.didymus.stoqr"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/stoqr-brand/favicon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-notifications",
         {
-          "icon": "./assets/icon.png",
+          "icon": "./assets/stoqr-brand/icon.png",
           "color": "#4F46E5",
           "sounds": []
         }
       ],
+      "expo-font"
+    ],
+    "notification": {
+      "icon": "./assets/stoqr-brand/icon.png",
+      "color": "#4F46E5"
+    },
       "expo-status-bar",
       [
         "expo-splash-screen",

@@ -7,7 +7,6 @@ import {
   TextInput,
   ScrollView,
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -16,7 +15,7 @@ import { useAuth } from "@/stores/auth";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useShoppingSession } from "@/stores/shopping-session";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
+import { Colors, FontSize, Spacing, Radius } from "@/constants/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const UNITS = [
@@ -361,14 +360,14 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   content: {
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.s48,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.s24,
+    paddingVertical: Spacing.s12,
     borderBottomWidth: 0.5,
     borderBottomColor: Colors.border,
   },
@@ -387,9 +386,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   section: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    gap: Spacing.md,
+    paddingHorizontal: Spacing.s24,
+    paddingTop: Spacing.s24,
+    gap: Spacing.s12,
   },
   sectionTitle: {
     fontSize: FontSize.sm,
@@ -399,7 +398,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   inputGroup: {
-    gap: Spacing.xs,
+    gap: Spacing.s4,
   },
   label: {
     fontSize: FontSize.sm,
@@ -408,8 +407,8 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
+    borderRadius: Radius.md,
+    padding: Spacing.s12,
     fontSize: FontSize.md,
     color: Colors.text.primary,
     borderWidth: 1,
@@ -417,7 +416,7 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
-    gap: Spacing.md,
+    gap: Spacing.s12,
   },
   unitScroll: {
     flexDirection: "row",
@@ -427,12 +426,12 @@ const styles = StyleSheet.create({
     height: 56,
     borderWidth: 1,
     alignItems: "center",
-    marginRight: Spacing.sm,
+    marginRight: Spacing.s8,
     justifyContent: "center",
     borderColor: Colors.border,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.full,
+    paddingVertical: Spacing.s8,
+    paddingHorizontal: Spacing.s12,
+    borderRadius: Radius.pill,
     backgroundColor: Colors.surface,
   },
   unitChipActive: {
@@ -455,22 +454,22 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: FontSize.xs,
     color: Colors.status.danger,
-    marginTop: Spacing.xs,
+    marginTop: Spacing.s4,
   },
   priceModeToggle: {
     flexDirection: "row",
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
+    borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: Colors.border,
     padding: 3,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.s4,
   },
   priceModeButton: {
     flex: 1,
-    paddingVertical: Spacing.xs,
+    paddingVertical: Spacing.s4,
     alignItems: "center",
-    borderRadius: BorderRadius.sm,
+    borderRadius: Radius.sm,
   },
   priceModeButtonActive: {
     backgroundColor: Colors.primary,

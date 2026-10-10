@@ -14,7 +14,7 @@ import { supabase } from "@/lib/supabase";
 import { useInventory } from "@/hooks/useInventory";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useActionSheet } from "@expo/react-native-action-sheet";
-import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
+import { Colors, FontSize, Spacing, Radius } from "@/constants/theme";
 
 type FilterStatus = "all" | "in_stock" | "low" | "out";
 
@@ -269,8 +269,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.s24,
+    paddingVertical: Spacing.s12,
   },
   title: {
     fontSize: FontSize.xxl,
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   addButton: {
     width: 44,
     height: 44,
-    borderRadius: BorderRadius.full,
+    borderRadius: Radius.pill,
     backgroundColor: Colors.primary,
     alignItems: "center",
     justifyContent: "center",
@@ -291,13 +291,13 @@ const styles = StyleSheet.create({
     fontWeight: "300",
   },
   searchContainer: {
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.s24,
+    marginBottom: Spacing.s8,
   },
   searchInput: {
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
+    borderRadius: Radius.md,
+    padding: Spacing.s12,
     fontSize: FontSize.md,
     color: Colors.text.primary,
     borderWidth: 1,
@@ -305,14 +305,14 @@ const styles = StyleSheet.create({
   },
   filterRow: {
     flexDirection: "row",
-    paddingHorizontal: Spacing.lg,
-    gap: Spacing.xs,
-    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.s24,
+    gap: Spacing.s4,
+    marginBottom: Spacing.s12,
   },
   filterChip: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.s8,
+    paddingVertical: Spacing.s4,
+    borderRadius: Radius.pill,
     borderWidth: 1,
     borderColor: Colors.border,
     backgroundColor: Colors.surface,
@@ -333,21 +333,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingHorizontal: Spacing.s24,
+    paddingBottom: Spacing.s48,
   },
   itemRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.s12,
     borderBottomWidth: 0.5,
     borderBottomColor: Colors.border,
-    gap: Spacing.sm,
+    gap: Spacing.s8,
   },
   statusDot: {
     width: 8,
     height: 8,
-    borderRadius: BorderRadius.full,
+    borderRadius: Radius.pill,
   },
   itemInfo: {
     flex: 1,
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: Spacing.sm,
+    gap: Spacing.s8,
   },
   loadingText: {
     fontSize: FontSize.md,
@@ -389,13 +389,13 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.text.muted,
     textAlign: "center",
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.s12,
   },
   qtyGroup: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.full,
+    borderRadius: Radius.pill,
     borderWidth: 1,
     borderColor: Colors.border,
     paddingHorizontal: 4,
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   qtyButton: {
     width: 24,
     height: 24,
-    borderRadius: BorderRadius.full,
+    borderRadius: Radius.pill,
     alignItems: "center",
     justifyContent: "center",
   },

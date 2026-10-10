@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Colors, FontSize, Spacing, BorderRadius } from "@/constants/theme";
+import { Colors, FontSize, Spacing, Radius } from "@/constants/theme";
 
 const { width } = Dimensions.get("window");
 
@@ -113,13 +113,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xxl,
-    paddingBottom: Spacing.xl,
+    paddingHorizontal: Spacing.s24,
+    paddingTop: Spacing.s48,
+    paddingBottom: Spacing.s32,
   },
   skipButton: {
     alignSelf: "flex-end",
-    padding: Spacing.sm,
+    padding: Spacing.s8,
   },
   skipText: {
     fontSize: FontSize.sm,
@@ -129,15 +129,15 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: Spacing.lg,
+    gap: Spacing.s24,
   },
   emojiContainer: {
     width: 120,
     height: 120,
-    borderRadius: BorderRadius.full,
+    borderRadius: Radius.pill,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.s12,
   },
   emoji: {
     fontSize: 56,
@@ -154,28 +154,28 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
     textAlign: "center",
     lineHeight: 24,
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: Spacing.s12,
   },
   footer: {
-    gap: Spacing.lg,
+    gap: Spacing.s24,
   },
   dots: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: Spacing.xs,
+    gap: Spacing.s4,
   },
   dot: {
     width: 8,
     height: 8,
-    borderRadius: BorderRadius.full,
+    borderRadius: Radius.pill,
     backgroundColor: Colors.border,
   },
   dotActive: {
     width: 24,
   },
   button: {
-    padding: Spacing.md,
-    borderRadius: BorderRadius.full,
+    padding: Spacing.s12,
+    borderRadius: Radius.pill,
     alignItems: "center",
   },
   buttonText: {
