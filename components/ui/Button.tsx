@@ -24,7 +24,7 @@ type Props = Omit<PressableProps, "style" | "children"> & {
   size?: "sm" | "lg";
   style?: StyleProp<ViewStyle>;
   labelStyle?: StyleProp<TextStyle>;
-  variant?: "primary" | "secondary" | "outline";
+  variant?: "primary" | "secondary" | "outline" | "ghost";
 };
 
 export const Button = ({
@@ -37,14 +37,7 @@ export const Button = ({
   labelStyle,
   ...rest
 }: Props) => {
-  const textColor = [
-    variant === "primary"
-      ? styles.onAccent
-      : variant === "outline"
-        ? styles.onSurface
-        : styles.onInverse,
-    disabled && styles.disabledLabel,
-  ];
+  const textColor = [labelColor[variant], disabled && styles.disabledLabel];
   return (
     <Pressable
       {...rest}
@@ -58,7 +51,7 @@ export const Button = ({
         value != null && styles.split,
         styles[variant],
         pressed && !disabled && styles.pressed,
-        disabled && styles.disabled,
+        disabled && variant !== "ghost" && styles.disabled,
         style,
       ]}
     >
@@ -93,4 +86,13 @@ const styles = StyleSheet.create({
   split: { flexDirection: "row", justifyContent: "space-between" },
   sm: { height: 40, paddingHorizontal: 14, borderRadius: Radius.control },
   outline: { backgroundColor: c.surface, borderWidth: 1, borderColor: c.line },
+  ghost: { backgroundColor: "transparent" },
+  ghostLabel: { fontFamily: Fonts.bodyMedium, fontSize: 15 },
 });
+
+const labelColor = {
+  primary: styles.onAccent,
+  secondary: styles.onInverse,
+  outline: styles.onSurface,
+  ghost: styles.onSurface,
+};
