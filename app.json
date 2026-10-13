@@ -7,11 +7,6 @@
     "icon": "./assets/stoqr-brand/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "stoqr",
-    "splash": {
-      "image": "./assets/stoqr-brand/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#4F46E5"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.didymus.stoqr",
@@ -21,8 +16,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/stoqr-brand/icon.png",
-        "backgroundColor": "#4F46E5"
+        "foregroundImage": "./assets/stoqr-brand/adaptive-icon.png",
+        "backgroundColor": "#17171B"
       },
       "package": "com.didymus.stoqr"
     },
@@ -34,26 +29,21 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/stoqr-brand/icon.png",
-          "color": "#4F46E5",
+          "icon": "./assets/stoqr-brand/notification-icon.png",
+          "color": "#C2410C",
           "sounds": []
         }
       ],
-      "expo-font"
-    ],
-    "notification": {
-      "icon": "./assets/stoqr-brand/icon.png",
-      "color": "#4F46E5"
-    },
-      "expo-status-bar",
+      "expo-font",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash.png",
+          "image": "./assets/stoqr-brand/splash.png",
           "resizeMode": "contain",
-          "backgroundColor": "#4F46E5"
+          "backgroundColor": "#17171B"
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "extra": {
       "router": {},
