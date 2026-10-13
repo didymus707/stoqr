@@ -2,6 +2,9 @@ export type Profile = {
   id: string;
   full_name: string | null;
   created_at: string;
+  postcode: string | null;
+  preferred_stores: string[];
+  onboarded_At: string | null;
 };
 
 export type Inventory = {
