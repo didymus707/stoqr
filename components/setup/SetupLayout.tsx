@@ -12,7 +12,6 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
 import { Text } from "../ui/Text";
 import { Button } from "../ui/Button";
@@ -95,6 +94,7 @@ export const SetupLayout = ({
               {subtitle}
             </Text>
           </View>
+          {children}
         </ScrollView>
 
         <View
