@@ -27,7 +27,7 @@ export default function SetupPostcode() {
   const trimmed = postcode.trim();
   const valid = POSTCODE_REGEX.test(trimmed);
   const showInvalid = !valid && trimmed.length >= 5;
-  const goNext = () => router.push("/setup/shops");
+  const goNext = () => router.push("/setup/stores");
 
   const handleContinue = async () => {
     if (!valid || !session || saving) return;
