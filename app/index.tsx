@@ -7,7 +7,6 @@ import { useEffect } from "react";
 import { useAuth } from "@/stores/auth";
 import { useRouter } from "expo-router";
 import { Colors, Spacing } from "../constants/theme";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Logo } from "@/components/ui/Logo";
 import { WelcomeQR } from "@/components/brand/WelcomeQR";
@@ -19,15 +18,6 @@ const c = Colors.light;
 export default function WelcomeScreen() {
   const router = useRouter();
   const { session, loading } = useAuth();
-
-  useEffect(() => {
-    const checkOnboarding = async () => {
-      const seen = await AsyncStorage.getItem("hasSeenOnboarding");
-      if (!seen) router.replace("/onboarding");
-    };
-
-    checkOnboarding();
-  }, []);
 
   useEffect(() => {
     if (!loading && session) {
