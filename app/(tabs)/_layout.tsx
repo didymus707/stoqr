@@ -1,32 +1,34 @@
 import { useAuth } from "@/stores/auth";
 import { Tabs, Redirect } from "expo-router";
-import { Colors } from "../../constants/theme";
-import {
-  View,
-  ActivityIndicator,
-  useWindowDimensions,
-} from "react-native";
+import { Colors, Fonts } from "../../constants/theme";
+import { View, ActivityIndicator, useWindowDimensions } from "react-native";
 import { Icon } from "@/components/ui/Icon";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 const c = Colors.light;
 
 export default function TabLayout() {
   const { session, loading } = useAuth();
-  const { width } = useWindowDimensions();
+  const [onboarded, setOnboarded] = useState<boolean | null>(null);
 
-  const isSmallScreen = width < 700;
+  useEffect(() => {
+    setOnboarded(null);
+    if (!session) return;
+    supabase
+      .from("profiles")
+      .select("onboarded_at")
+      .eq("id", session.user.id)
+      .single()
+      .then(({ data, error }) =>
+        setOnboarded(error ? true : !!data?.onboarded_at),
+      );
+  }, [session]);
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
-
-  if (!session) {
-    return <Redirect href="/sign-in" />;
-  }
+  if (loading) return <LoadingScreen />;
+  if (!session) return <Redirect href="/sign-in" />;
+  if (onboarded === null) return <LoadingScreen />;
+  if (!onboarded) return <Redirect href="/setup/postcode" />;
 
   return (
     <Tabs
@@ -37,17 +39,11 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: c.surfaceRaised,
           borderTopColor: c.line,
-          borderTopWidth: 0.5,
-          paddingBottom: 0,
-          paddingTop: isSmallScreen ? 4 : 8,
-          height: isSmallScreen ? 90 : 65,
+          borderTopWidth: 1,
         },
         tabBarLabelStyle: {
-          fontSize: isSmallScreen ? 14 : 16,
-          marginBottom: isSmallScreen ? 6 : 8,
-        },
-        tabBarIconStyle: {
-          marginTop: isSmallScreen ? 4 : 8,
+          fontFamily: Fonts.bodyMedium,
+          fontSize: 11,
         },
       }}
     >
@@ -55,38 +51,45 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => (
-            <Icon name="home" color={color} />
-          ),
+          tabBarIcon: ({ color }) => <Icon name="home" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="inventory"
+        name="cupboard"
         options={{
-          title: "Inventory",
-          tabBarIcon: ({ color }) => (
-            <Icon name="cupboard" color={color} />
-          ),
+          title: "Cupboard",
+          tabBarIcon: ({ color }) => <Icon name="cupboard" color={color} />,
         }}
       />
       <Tabs.Screen
         name="shopping"
         options={{
           title: "List",
-          tabBarIcon: ({ color }) => (
-            <Icon name="list" color={color} />
-          ),
+          tabBarIcon: ({ color }) => <Icon name="list" color={color} />,
         }}
       />
       <Tabs.Screen
         name="compare"
         options={{
           title: "Compare",
-          tabBarIcon: ({ color }) => (
-            <Icon name="budget" color={color} />
-          ),
+          tabBarIcon: ({ color }) => <Icon name="budget" color={color} />,
         }}
       />
     </Tabs>
+  );
+}
+
+function LoadingScreen() {
+  return (
+    <View
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: c.surface,
+      }}
+    >
+      <ActivityIndicator color={c.accent} />
+    </View>
   );
 }

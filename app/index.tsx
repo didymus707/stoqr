@@ -1,28 +1,23 @@
 import {
   View,
-  Text,
   StyleSheet,
-  TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
 import { useEffect } from "react";
 import { useAuth } from "@/stores/auth";
 import { useRouter } from "expo-router";
-import { Colors, FontSize, Spacing, Radius } from "../constants/theme";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Colors, Spacing } from "../constants/theme";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Logo } from "@/components/ui/Logo";
+import { WelcomeQR } from "@/components/brand/WelcomeQR";
+import { Text } from "@/components/ui/Text";
+import { Button } from "@/components/ui/Button";
+
+const c = Colors.light;
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const { session, loading } = useAuth();
-
-  useEffect(() => {
-    const checkOnboarding = async () => {
-      const seen = await AsyncStorage.getItem("hasSeenOnboarding");
-      if (!seen) router.replace("/onboarding");
-    };
-
-    checkOnboarding();
-  }, []);
 
   useEffect(() => {
     if (!loading && session) {
@@ -32,138 +27,62 @@ export default function WelcomeScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color={c.accent} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.screen}>
+      <Logo size={40} />
+
       <View style={styles.hero}>
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoEmoji}>📦</Text>
-        </View>
-        <Text style={styles.title}>StoQr</Text>
-        <Text style={styles.tagline}>Your intelligent inventory assistant</Text>
+        <WelcomeQR />
       </View>
 
-      <View style={styles.features}>
-        <FeatureRow emoji="🔔" text="Get alerted before you run out" />
-        <FeatureRow emoji="💰" text="Compare prices at local stores" />
-        <FeatureRow emoji="📸" text="Scan receipts to update stock" />
+      <View style={styles.copy}>
+        <Text variant="display" accessibilityRole="header">
+          Never run out{"\n"}of milk again
+        </Text>
+        <Text variant="body" color={c.inkMuted}>
+          stoQr knows what's in your cupboards, warns you before you run low,
+          and shows which shop near you is cheapest, priced by people in your
+          area.
+        </Text>
       </View>
 
       <View style={styles.actions}>
-        <TouchableOpacity
-          style={styles.primaryButton}
+        <Button label="Get Started" onPress={() => router.push("/sign-up")} />
+        <Button
+          label="I already have an account"
+          variant="ghost"
           onPress={() => router.push("/sign-up")}
-        >
-          <Text style={styles.primaryButtonText}>Get Started</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={() => router.push("/sign-in")}
-        >
-          <Text style={styles.secondaryButtonText}>
-            I already have an account
-          </Text>
-        </TouchableOpacity>
+        />
       </View>
-    </View>
-  );
-}
-
-function FeatureRow({ emoji, text }: { emoji: string; text: string }) {
-  return (
-    <View style={styles.featureRow}>
-      <Text style={styles.featureEmoji}>{emoji}</Text>
-      <Text style={styles.featureText}>{text}</Text>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: {
+  loading: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.background,
+    backgroundColor: c.surface,
   },
-  container: {
+  screen: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: c.surface,
     paddingHorizontal: Spacing.s24,
-    justifyContent: "space-between",
-    paddingVertical: Spacing.s48,
+    paddingVertical: Spacing.s16,
+    gap: Spacing.s28,
   },
   hero: {
-    alignItems: "center",
-    marginTop: Spacing.s48,
-  },
-  logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: Radius.lg,
-    backgroundColor: Colors.surface,
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: Spacing.s12,
   },
-  logoEmoji: {
-    fontSize: 40,
-  },
-  title: {
-    fontSize: FontSize.xxl,
-    fontWeight: "700",
-    color: Colors.text.primary,
-    marginBottom: Spacing.s8,
-  },
-  tagline: {
-    fontSize: FontSize.md,
-    color: Colors.text.secondary,
-    textAlign: "center",
-  },
-  features: {
-    gap: Spacing.s12,
-  },
-  featureRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.surface,
-    padding: Spacing.s12,
-    borderRadius: Radius.md,
-    gap: Spacing.s12,
-  },
-  featureEmoji: {
-    fontSize: 24,
-  },
-  featureText: {
-    fontSize: FontSize.md,
-    color: Colors.text.primary,
-    flex: 1,
-  },
-  actions: {
-    gap: Spacing.s8,
-  },
-  primaryButton: {
-    backgroundColor: Colors.primary,
-    padding: Spacing.s12,
-    borderRadius: Radius.pill,
-    alignItems: "center",
-  },
-  primaryButtonText: {
-    color: "#FFFFFF",
-    fontSize: FontSize.md,
-    fontWeight: "600",
-  },
-  secondaryButton: {
-    padding: Spacing.s12,
-    alignItems: "center",
-  },
-  secondaryButtonText: {
-    color: Colors.text.secondary,
-    fontSize: FontSize.sm,
-  },
+  copy: { gap: Spacing.s12 },
+  actions: { gap: Spacing.s8 },
 });
