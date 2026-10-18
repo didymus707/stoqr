@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -50,6 +51,7 @@ export default function ShoppingListScreen() {
   const { activeStore, setActiveStore, checkedLowStock, setCheckedLowStock } =
     useShoppingSession();
 
+  const scrollRef = useRef<ScrollView>(null);
   const [newItemName, setNewItemName] = useState("");
   const [customStoreName, setCustomStoreName] = useState("");
   const [showCustomStore, setShowCustomStore] = useState(false);
@@ -241,12 +243,15 @@ export default function ShoppingListScreen() {
         </View>
       ) : (
         <ScrollView
+          ref={scrollRef}
           style={styles.list}
           contentContainerStyle={[
             styles.listContent,
             selectedIds.length > 0 && styles.listContentWithFooter,
           ]}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          automaticallyAdjustKeyboardInsets
           showsVerticalScrollIndicator={false}
         >
           {totalItems === 0 ? (
@@ -325,6 +330,12 @@ export default function ShoppingListScreen() {
               returnKeyType="done"
               autoCapitalize="words"
               accessibilityLabel="Add an item to your list"
+              onFocus={() =>
+                setTimeout(
+                  () => scrollRef.current?.scrollToEnd({ animated: true }),
+                  250,
+                )
+              }
             />
             <Button
               label="Add"
