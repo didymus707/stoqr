@@ -30,8 +30,8 @@ type Props = {
 export const Screen = ({
   title,
   subtitle,
-  compact,
-  showBack,
+  compact = false,
+  showBack = true,
   onBack,
   footer,
   children,
