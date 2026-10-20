@@ -75,6 +75,38 @@ const ICONS = {
       <Path d="M8 11V8a4 4 0 0 1 8 0v3" />
     </>
   ),
+  eye: (
+    <>
+      <Path d="M2 12c1-2.5 5-7 10-7s9 4.5 10 7c-1 2.5-5 7-10 7S3 14.5 2 12z" />
+      <Circle cx={12} cy={12} r={3} />
+    </>
+  ),
+  eyeOff: (
+    <>
+      <Path d="M3 3l18 18" />
+      <Path d="M10.6 5.1A9.8 9.8 0 0 1 12 5c5 0 9 4.5 10 7a12.6 12.6 0 0 1-3 4.2M6.6 6.6C4.4 8 2.8 10.2 2 12c1 2.5 5 7 10 7a9.6 9.6 0 0 0 5.4-1.6" />
+      <Path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+    </>
+  ),
+  mail: (
+    <>
+      <Rect x={3} y={5} width={18} height={14} rx={2} />
+      <Path d="M3 7l9 6 9-6" />
+    </>
+  ),
+  logout: (
+    <>
+      <Path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
+      <Path d="M10 17l-5-5 5-5" />
+      <Path d="M5 12h11" />
+    </>
+  ),
+  clock: (
+    <>
+      <Circle cx={12} cy={12} r={9} />
+      <Path d="M12 7v5l3 2" />
+    </>
+  ),
 };
 
 export type IconName = keyof typeof ICONS;
