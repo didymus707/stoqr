@@ -20,6 +20,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const UNITS = [
   "pc",
+  'roll',
+  'bar',
   "kg",
   "g",
   "litre",
@@ -31,7 +33,7 @@ const UNITS = [
   "loaf",
 ];
 
-const COUNTABLE_UNITS = ["pc", "can", "bottle", "bag", "box", "loaf"];
+const COUNTABLE_UNITS = ["pc", "can", "bottle", "bag", "box", "loaf", 'roll', 'bar'];
 
 const AddItemScreen = () => {
   const router = useRouter();

@@ -21,11 +21,13 @@ export type Item = {
   inventory_id: string;
   name: string;
   quantity: number;
-  unit: string | null;
-  low_stock_threshold: number;
-  status: ItemStatus;
-  store: string | null;
-  price: number | null;
+  pack_size: number;
   created_at: string;
   updated_at: string;
+  status: ItemStatus;
+  unit: string | null;
+  price: number | null;
+  store: string | null;
+  pack_price: number | null;
+  low_stock_threshold: number;
 };

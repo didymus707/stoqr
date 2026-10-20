@@ -18,6 +18,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const UNITS = [
   "pc",
+  "roll",
+  "bar",
   "kg",
   "g",
   "litre",
