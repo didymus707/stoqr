@@ -2,7 +2,6 @@ import {
   Colors,
   Fonts,
   Radius,
-  FontSize,
   Spacing,
   Type,
 } from "@/constants/theme";
@@ -78,7 +77,7 @@ const styles = StyleSheet.create({
   secondary: { backgroundColor: c.inverse },
   value: {
     fontFamily: Fonts.mono,
-    fontSize: FontSize.md,
+    fontSize: 15,
     fontVariant: ["tabular-nums"],
   },
   label: { ...Type.button },
