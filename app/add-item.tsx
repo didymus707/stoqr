@@ -1,489 +1,114 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  ScrollView,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/stores/auth";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useShoppingSession } from "@/stores/shopping-session";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Colors, FontSize, Spacing, Radius } from "@/constants/theme";
+import { Colors } from "@/constants/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  emptyItemForm,
+  formToItemFields,
+  ItemForm,
+  ItemFormErrors,
+  ItemFormValues,
+  validateItemForm,
+} from "@/components/items/itemForm";
+import { getOrCreateInventory } from "@/lib/setup";
+import { Screen } from "@/components/ui/Screen";
+import { Text } from "@/components/ui/Text";
+import { Button } from "@/components/ui/Button";
+import { unitLabel } from "@/lib/unit";
 
-const UNITS = [
-  "pc",
-  'roll',
-  'bar',
-  "kg",
-  "g",
-  "litre",
-  "ml",
-  "can",
-  "bottle",
-  "bag",
-  "box",
-  "loaf",
-];
-
-const COUNTABLE_UNITS = ["pc", "can", "bottle", "bag", "box", "loaf", 'roll', 'bar'];
+const c = Colors.light;
 
 const AddItemScreen = () => {
   const router = useRouter();
   const { session } = useAuth();
   const { activeStore } = useShoppingSession();
-  const {
-    name: prefilledName,
-    store: prefilledStore,
-    manualItemId,
-  } = useLocalSearchParams<{
-    name: string;
-    store: string;
-    manualItemId: string;
+  const params = useLocalSearchParams<{
+    name?: string;
+    store?: string;
+    manualItemId?: string;
   }>();
 
-  const [unit, setUnit] = useState("pc");
-  const [quantity, setQuantity] = useState("1");
-  const [loading, setLoading] = useState(false);
-  const [threshold, setThreshold] = useState("1");
-  const [priceInput, setPriceInput] = useState("");
-  const [name, setName] = useState(prefilledName ?? "");
-  const [store, setStore] = useState(prefilledStore ?? activeStore ?? "");
-  const [priceMode, setPriceMode] = useState<"per_unit" | "total">("per_unit");
-  const [errors, setErrors] = useState({
-    name: "",
-    quantity: "",
-    form: "",
-  });
-  const insets = useSafeAreaInsets();
+  const [values, setValues] = useState<ItemFormValues>(() =>
+    emptyItemForm({
+      name: params.name ?? "",
+      store: params.store ?? activeStore ?? "",
+    }),
+  );
+  const [errors, setErrors] = useState<ItemFormErrors>({});
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const parsedQty = parseFloat(quantity) || 1;
-  const parsedPrice = parseFloat(priceInput) || 0;
+  const update = (patch: Partial<ItemFormValues>) => {
+    setValues((prev) => ({ ...prev, ...patch }));
+    setErrors({});
+  };
 
-  const pricePerUnit =
-    priceMode === "per_unit" ? parsedPrice : parsedPrice / parsedQty;
-  const totalValue =
-    priceMode === "total" ? parsedPrice : parsedPrice * parsedQty;
+  const handleAdd = async () => {
+    const found = validateItemForm(values);
+    setErrors(found);
 
-  const handleAddItem = async () => {
-    const newErrors = { name: "", quantity: "", form: "" };
+    if (Object.keys(found).length > 0 || !session || saving) return;
 
-    if (!name.trim()) {
-      newErrors.name = "Item name is required";
-    }
-
-    const parsedQty = parseFloat(quantity) || 1;
-    const parsedPriceInput = priceInput ? parseFloat(priceInput) : null;
-
-    const finalPricePerUnit = parsedPriceInput
-      ? priceMode === "per_unit"
-        ? parsedPriceInput
-        : parsedPriceInput / parsedQty
-      : null;
-
-    const finalTotalValue = parsedPriceInput
-      ? priceMode === "total"
-        ? parsedPriceInput
-        : parsedPriceInput * parsedQty
-      : null;
-
-    if (isNaN(parsedQty) || parsedQty < 0) {
-      newErrors.quantity = "Please enter a valid quantity";
-    }
-
-    setErrors(newErrors);
-    if (Object.values(newErrors).some(Boolean)) return;
-
-    setLoading(true);
+    setSaving(true);
+    setFormError(null);
 
     try {
-      // First get or create the user's default inventory
-      let { data: inventories, error: invError } = await supabase
-        .from("inventories")
-        .select("id")
-        .eq("user_id", session!.user.id)
-        .limit(1);
+      const inventoryId = await getOrCreateInventory(session.user.id);
+      const { error } = await supabase
+        .from("items")
+        .insert({ inventory_id: inventoryId, ...formToItemFields(values) });
+      if (error) throw error;
 
-      if (invError) throw invError;
-
-      let inventoryId: string;
-
-      if (!inventories || inventories.length === 0) {
-        // Create a default inventory for this user
-        const { data: newInv, error: createError } = await supabase
-          .from("inventories")
-          .insert({
-            user_id: session!.user.id,
-            name: "My Inventory",
-          })
-          .select("id")
-          .single();
-
-        if (createError) throw createError;
-        inventoryId = newInv.id;
-      } else {
-        inventoryId = inventories[0].id;
-      }
-
-      const parsedThreshold = parseFloat(threshold) || 1;
-
-      const { error: itemError } = await supabase.from("items").insert({
-        inventory_id: inventoryId,
-        name: name.trim(),
-        quantity: parsedQty,
-        unit: unit,
-        low_stock_threshold: parsedThreshold,
-        store: store.trim() || null,
-        price: finalPricePerUnit,
-        total_value: finalTotalValue,
-        price_mode: priceMode,
-      });
-
-      if (itemError) throw itemError;
-
-      if (manualItemId) {
-        // checking if item was added successfully in order to remove it from shopping list using AsyncStorage
-        await AsyncStorage.setItem("completedManualItem", manualItemId);
+      if (params.manualItemId) {
+        await AsyncStorage.setItem("completedManualItem", params.manualItemId);
       }
       router.back();
-    } catch (err: any) {
-      setErrors((prev) => ({ ...prev, form: err.message }));
+    } catch {
+      setFormError(
+        "Couldn't add this item. Check your connection and try again",
+      );
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
+  const qty = Number(values.quantity) || 0;
+
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <Screen
+      compact
+      title="Add Item"
+      footer={
+        <>
+          {formError ? (
+            <Text
+              variant="caption"
+              color={c.accentText}
+              style={{ textAlign: "center" }}
+            >
+              {formError}
+            </Text>
+          ) : null}
+          <Button
+            label={saving ? "Adding..." : "Add to cupboard"}
+            value={`${qty} ${unitLabel(qty, values.unit)}`}
+            disabled={saving}
+            onPress={handleAdd}
+          />
+        </>
+      }
     >
-      <ScrollView
-        style={[styles.container, { paddingTop: insets.top }]}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.cancelText}>Cancel</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>Add Item</Text>
-          <TouchableOpacity onPress={handleAddItem}>
-            {loading ? (
-              <ActivityIndicator size={16} color={Colors.primary} />
-            ) : (
-              <Text style={styles.saveText}>Save</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Item Details</Text>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Name *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Whole Milk"
-              placeholderTextColor={Colors.text.muted}
-              value={name}
-              onChangeText={(text) => {
-                setName(text);
-                setErrors((prev) => ({ ...prev, name: "" }));
-              }}
-              autoCapitalize="words"
-              autoFocus
-            />
-            <Text style={styles.hint}>
-              You can add more details later from your inventory
-            </Text>
-            {errors.name ? (
-              <Text style={styles.errorText}>{errors.name}</Text>
-            ) : null}
-          </View>
-
-          <View style={styles.row}>
-            <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={styles.label}>Quantity *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="1"
-                placeholderTextColor={Colors.text.muted}
-                value={quantity}
-                onChangeText={(text) => {
-                  setQuantity(text);
-                  setErrors((prev) => ({ ...prev, quantity: "" }));
-                }}
-                keyboardType={
-                  COUNTABLE_UNITS.includes(unit) ? "number-pad" : "decimal-pad"
-                }
-              />
-              {errors.quantity ? (
-                <Text style={styles.errorText}>{errors.quantity}</Text>
-              ) : null}
-            </View>
-
-            <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={styles.label}>Unit</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.unitScroll}
-              >
-                {UNITS.map((u) => (
-                  <TouchableOpacity
-                    key={u}
-                    style={[
-                      styles.unitChip,
-                      unit === u && styles.unitChipActive,
-                    ]}
-                    onPress={() => setUnit(u)}
-                  >
-                    <Text
-                      style={[
-                        styles.unitChipText,
-                        unit === u && styles.unitChipTextActive,
-                      ]}
-                    >
-                      {u}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Alert me when below</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="1"
-              placeholderTextColor={Colors.text.muted}
-              value={threshold}
-              onChangeText={setThreshold}
-              keyboardType="numeric"
-            />
-            <Text style={styles.hint}>
-              We'll alert you when quantity drops to this level
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Store & Price (optional)</Text>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Store</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Lidl, Tesco, Aldi"
-              placeholderTextColor={Colors.text.muted}
-              value={store}
-              onChangeText={setStore}
-              autoCapitalize="words"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Price (£)</Text>
-            <View style={styles.priceModeToggle}>
-              <TouchableOpacity
-                style={[
-                  styles.priceModeButton,
-                  priceMode === "per_unit" && styles.priceModeButtonActive,
-                ]}
-                onPress={() => setPriceMode("per_unit")}
-              >
-                <Text
-                  style={[
-                    styles.priceModeText,
-                    priceMode === "per_unit" && styles.priceModeTextActive,
-                  ]}
-                >
-                  Per Unit
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.priceModeButton,
-                  priceMode === "total" && styles.priceModeButtonActive,
-                ]}
-                onPress={() => setPriceMode("total")}
-              >
-                <Text
-                  style={[
-                    styles.priceModeText,
-                    priceMode === "total" && styles.priceModeTextActive,
-                  ]}
-                >
-                  Total paid
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <TextInput
-              style={styles.input}
-              placeholder={
-                priceMode === "per_unit" ? "£0.00 per item" : "£0.00 total"
-              }
-              placeholderTextColor={Colors.text.muted}
-              value={priceInput}
-              onChangeText={setPriceInput}
-              keyboardType="decimal-pad"
-            />
-
-            {priceInput && parseFloat(priceInput) > 0 && (
-              <Text style={styles.hint}>
-                {priceMode === "per_unit"
-                  ? `Total: £${totalValue.toFixed(2)} for ${quantity} ${unit}`
-                  : `£${pricePerUnit.toFixed(2)} per ${unit}`}
-              </Text>
-            )}
-          </View>
-        </View>
-
-        {errors.form ? (
-          <Text style={styles.errorText}>{errors.form}</Text>
-        ) : null}
-      </ScrollView>
-    </KeyboardAvoidingView>
+      <ItemForm
+        values={values}
+        onChange={update}
+        errors={errors}
+        autoFocusName={!params.name}
+      />
+    </Screen>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  content: {
-    paddingBottom: Spacing.s48,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.s24,
-    paddingVertical: Spacing.s12,
-    borderBottomWidth: 0.5,
-    borderBottomColor: Colors.border,
-  },
-  title: {
-    fontSize: FontSize.md,
-    fontWeight: "600",
-    color: Colors.text.primary,
-  },
-  cancelText: {
-    fontSize: FontSize.md,
-    color: Colors.text.secondary,
-  },
-  saveText: {
-    fontSize: FontSize.md,
-    color: Colors.primary,
-    fontWeight: "600",
-  },
-  section: {
-    paddingHorizontal: Spacing.s24,
-    paddingTop: Spacing.s24,
-    gap: Spacing.s12,
-  },
-  sectionTitle: {
-    fontSize: FontSize.sm,
-    fontWeight: "600",
-    color: Colors.text.secondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  inputGroup: {
-    gap: Spacing.s4,
-  },
-  label: {
-    fontSize: FontSize.sm,
-    fontWeight: "500",
-    color: Colors.text.primary,
-  },
-  input: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
-    padding: Spacing.s12,
-    fontSize: FontSize.md,
-    color: Colors.text.primary,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  row: {
-    flexDirection: "row",
-    gap: Spacing.s12,
-  },
-  unitScroll: {
-    flexDirection: "row",
-  },
-  unitChip: {
-    width: 56,
-    height: 56,
-    borderWidth: 1,
-    alignItems: "center",
-    marginRight: Spacing.s8,
-    justifyContent: "center",
-    borderColor: Colors.border,
-    paddingVertical: Spacing.s8,
-    paddingHorizontal: Spacing.s12,
-    borderRadius: Radius.pill,
-    backgroundColor: Colors.surface,
-  },
-  unitChipActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  unitChipText: {
-    textAlign: "center",
-    fontSize: FontSize.xs,
-    color: Colors.text.secondary,
-  },
-  unitChipTextActive: {
-    color: "#ffffff",
-    fontWeight: "600",
-  },
-  hint: {
-    fontSize: FontSize.xs,
-    color: Colors.text.muted,
-  },
-  errorText: {
-    fontSize: FontSize.xs,
-    color: Colors.status.danger,
-    marginTop: Spacing.s4,
-  },
-  priceModeToggle: {
-    flexDirection: "row",
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 3,
-    marginBottom: Spacing.s4,
-  },
-  priceModeButton: {
-    flex: 1,
-    paddingVertical: Spacing.s4,
-    alignItems: "center",
-    borderRadius: Radius.sm,
-  },
-  priceModeButtonActive: {
-    backgroundColor: Colors.primary,
-  },
-  priceModeText: {
-    fontSize: FontSize.sm,
-    color: Colors.text.secondary,
-    fontWeight: "500",
-  },
-  priceModeTextActive: {
-    color: "#ffffff",
-  },
-});
 
 export default AddItemScreen;
