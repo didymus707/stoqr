@@ -12,7 +12,7 @@ import {
   ItemFormErrors,
   ItemFormValues,
   validateItemForm,
-} from "@/components/items/itemForm";
+} from "@/components/items/ItemForm";
 import { getOrCreateInventory } from "@/lib/setup";
 import { Screen } from "@/components/ui/Screen";
 import { Text } from "@/components/ui/Text";

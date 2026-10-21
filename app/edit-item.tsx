@@ -11,7 +11,7 @@ import {
   ItemFormValues,
   itemToForm,
   validateItemForm,
-} from "@/components/items/itemForm";
+} from "@/components/items/ItemForm";
 import { Screen } from "@/components/ui/Screen";
 import { Text } from "@/components/ui/Text";
 import { Item } from "@/types/database";
