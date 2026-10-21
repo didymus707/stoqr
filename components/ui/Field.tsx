@@ -9,7 +9,7 @@ const c = Colors.light;
 type Props = ComponentProps<typeof TextField> & {
   label: string;
   required?: boolean;
-  hint?: string | null;
+  hint?: string;
   error?: string | null;
 };
 
@@ -39,17 +39,16 @@ export function Field({
         accessibilityLabel={
           accessibilityLabel ?? (required ? `${label}, required` : label)
         }
-      >
-        {error ? (
-          <Text variant="caption" color={c.accentText}>
-            {error}
-          </Text>
-        ) : hint ? (
-          <Text variant="caption" color={c.inkMuted}>
-            {hint}
-          </Text>
-        ) : null}
-      </TextField>
+      />
+      {error ? (
+        <Text variant="caption" color={c.accentText}>
+          {error}
+        </Text>
+      ) : hint ? (
+        <Text variant="caption" color={c.inkMuted}>
+          {hint}
+        </Text>
+      ) : null}
     </View>
   );
 }
