@@ -1,17 +1,3 @@
--- Items: how many units come in one pack, and what a pack costs.
-ALTER TABLE items
-  ADD COLUMN IF NOT EXISTS pack_size NUMERIC NOT NULL DEFAULT 1 CHECK (pack_size > 0),
-  ADD COLUMN IF NOT EXISTS pack_price NUMERIC CHECK (pack_price >= 0);
-
--- Existing items were priced per unit, i.e. a "pack" of 1.
-UPDATE items
-  SET pack_price = price WHERE pack_price IS NULL AND price IS NOT NULL;
-
--- History: remember how it was bought ("2 × 24-pack").
-ALTER TABLE transaction_histories
-  ADD COLUMN IF NOT EXISTS packs NUMERIC,
-  ADD COLUMN IF NOT EXISTS pack_size NUMERIC NOT NULL DEFAULT 1;
-
 CREATE OR REPLACE FUNCTION restock_items(
   p_store TEXT,
   p_items JSONB
