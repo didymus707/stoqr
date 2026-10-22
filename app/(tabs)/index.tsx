@@ -1,417 +1,298 @@
 import {
-  View,
-  Text,
-  StyleSheet,
+  ActivityIndicator,
+  Pressable,
   ScrollView,
-  TouchableOpacity,
+  StyleSheet,
+  View,
 } from "react-native";
-import { Item } from "@/types/database";
 import { useRouter } from "expo-router";
-import { useAuth } from "@/stores/auth";
-import { useInventory } from "@/hooks/useInventory";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
-import { useActionSheet } from "@expo/react-native-action-sheet";
-import { Colors, FontSize, Spacing, Radius } from "@/constants/theme";
+import { SafeAreaView } from "react-native-safe-area-context";
 import BudgetSnapshot from "@/components/features/BudgetSnapshot";
+import { Button } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
+import { Stepper } from "@/components/ui/Stepper";
+import { Text } from "@/components/ui/Text";
+import { Colors, Fonts, Radius, Spacing } from "@/constants/theme";
+import { useInventory } from "@/hooks/useInventory";
+import { useProfile } from "@/hooks/useProfile";
+import { postcodeDistrict } from "@/lib/setup";
+import { unitLabel } from "@/lib/unit";
+import { useAuth } from "@/stores/auth";
+import { useShoppingSession } from "@/stores/shopping-session";
+
+const c = Colors.light;
+const RUNNING_LOW_LIMIT = 4;
+
+const greeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Morning";
+  if (hour < 18) return "Afternoon";
+  return "Evening";
+};
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { session, signOut } = useAuth();
-  const { showActionSheetWithOptions } = useActionSheet();
-  const { items, stats, loading, error, refetch } = useInventory();
-  const insets = useSafeAreaInsets();
+  const { session } = useAuth();
+  const { profile } = useProfile();
+  const { activeStore } = useShoppingSession();
+  const { items, stats, loading, error, refetch, updateQuantity } =
+    useInventory();
 
-  const fullName = session?.user?.user_metadata?.full_name ?? "there";
-  const firstName = fullName.split(" ")[0];
+  const fullName =
+    profile?.full_name ?? session?.user?.user_metadata?.full_name ?? "";
+  const firstName = fullName.trim().split(" ")[0] || "there";
+  const initials =
+    fullName
+      .trim()
+      .split(/\s+/)
+      .map((w: string) => w.charAt(0).toUpperCase())
+      .slice(0, 2)
+      .join("") || "?";
+  const place = profile?.postcode
+    ? `Home · ${postcodeDistrict(profile.postcode)}`
+    : "Home";
 
-  const getGreeting = (): string => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
-  };
-
-  const handleAvatarPress = () => {
-    const options = ["Profile & Settings", "Sign Out", "Cancel"];
-    const destructiveButtonIndex = 1;
-    const cancelButtonIndex = 2;
-
-    showActionSheetWithOptions(
-      {
-        options,
-        cancelButtonIndex,
-        destructiveButtonIndex,
-        title: firstName,
-        message: session?.user?.email ?? "",
-      },
-      (selectedIndex) => {
-        switch (selectedIndex) {
-          case 0:
-            router.push("/profile");
-            break;
-          case 1:
-            signOut();
-            break;
-          case 2:
-            break;
-        }
-      },
-    );
-  };
-
-  if (loading) {
-    return <DashboardSkeleton />;
-  }
-
-  if (error) {
-    return (
-      <View style={styles.centeredContainer}>
-        <Text style={styles.errorText}>Something went wrong</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={refetch}>
-          <Text style={styles.retryText}>Try again</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  const lowCount = stats.low + stats.out;
+  const runningLow = items
+    .filter((i) => i.status !== "ok")
+    .sort(
+      (a, b) => (a.status === "out" ? -1 : 0) - (b.status === "out" ? -1 : 0),
+    )
+    .slice(0, RUNNING_LOW_LIMIT);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+    <SafeAreaView edges={["top"]} style={styles.screen}>
       <ScrollView
-        style={styles.container}
         contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>{getGreeting()} 👋</Text>
-            <Text style={styles.name}>{firstName}</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <TouchableOpacity
-              style={styles.headerAddButton}
-              onPress={() => router.push("/add-item")}
-            >
-              <Text style={styles.headerAddButtonText}>+</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.avatar} onPress={handleAvatarPress}>
-              <Text style={styles.avatarText}>
-                {firstName.charAt(0).toUpperCase()}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.summaryRow}>
-          <SummaryCard label="Total Items" value={String(stats.total)} />
-          <SummaryCard label="Low Stock" value={String(stats.low)} alert />
-          <SummaryCard label="Out of Stock" value={String(stats.out)} danger />
-        </View>
-
-        <BudgetSnapshot />
-
-        <Text style={styles.sectionTitle}>Inventory</Text>
-
-        {items.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>📦</Text>
-            <Text style={styles.emptyTitle}>No items yet</Text>
-            <Text style={styles.emptySubtitle}>
-              Add your first item to start tracking your inventory
+          <View style={styles.flex}>
+            <Text variant="label" color={c.inkMuted}>
+              {place}
             </Text>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => router.push("/(tabs)/inventory")}
-            >
-              <Text style={styles.addButtonText}>Add your first item</Text>
-            </TouchableOpacity>
+            <Text variant="titleSm" accessibilityRole="header">
+              {greeting()}, {firstName}
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => router.push("/profile")}
+            accessibilityRole="button"
+            accessibilityLabel="Profile"
+            style={styles.avatar}
+          >
+            <Text variant="label" color={c.onInverse}>
+              {initials}
+            </Text>
+          </Pressable>
+        </View>
+
+        {activeStore ? (
+          <View style={styles.session}>
+            <Icon name="store" size={22} color={c.accent} />
+            <View style={styles.flex}>
+              <Text variant="caption" color={c.inkMuted}>
+                Shopping at
+              </Text>
+              <Text variant="item">{activeStore}</Text>
+            </View>
+            <Button
+              label="Change"
+              size="sm"
+              variant="outline"
+              onPress={() => router.push("/(tabs)/shopping")}
+            />
+          </View>
+        ) : null}
+
+        {loading && items.length === 0 ? (
+          <View style={styles.loading}>
+            <ActivityIndicator color={c.accent} />
+          </View>
+        ) : error ? (
+          <View style={styles.notice}>
+            <Text variant="item">Couldn't load your cupboard</Text>
+            <Text variant="bodySm" color={c.inkMuted}>
+              Check your connection and try again.
+            </Text>
+            <Button
+              label="Try again"
+              size="sm"
+              variant="outline"
+              onPress={refetch}
+              style={styles.start}
+            />
+          </View>
+        ) : items.length === 0 ? (
+          <View style={styles.notice}>
+            <Text variant="heading">Your cupboard is empty</Text>
+            <Text variant="bodySm" color={c.inkMuted}>
+              Add the things you keep at home and we'll tell you before they run
+              out.
+            </Text>
+            <Button
+              label="Add your first item"
+              size="sm"
+              onPress={() => router.push("/add-item")}
+              style={styles.start}
+            />
           </View>
         ) : (
-          items.map((item) => <InventoryItem key={item.id} item={item} />)
+          <>
+            <View style={styles.stat}>
+              <View style={styles.statTop}>
+                <Text variant="numberXl" color={c.onInverse}>
+                  {lowCount}
+                </Text>
+                <View style={styles.statText}>
+                  <Text variant="heading" color={c.onInverse}>
+                    {lowCount === 0
+                      ? "nothing running low"
+                      : lowCount === 1
+                        ? "thing running low"
+                        : "things running low"}
+                  </Text>
+                  <Text variant="bodySm" color={c.onInverseMuted}>
+                    {lowCount === 0
+                      ? `All ${stats.total} items are stocked`
+                      : stats.out > 0
+                        ? `${stats.out} ${stats.out === 1 ? "is" : "are"} out · all on your list`
+                        : "All on your shopping list"}
+                  </Text>
+                </View>
+              </View>
+              {lowCount > 0 ? (
+                <Button
+                  label="Open shopping list"
+                  onPress={() => router.push("/(tabs)/shopping")}
+                />
+              ) : null}
+            </View>
+
+            {runningLow.length > 0 ? (
+              <View style={styles.section}>
+                <View style={styles.sectionHead}>
+                  <Text variant="heading">Running low</Text>
+                  <Button
+                    label="See cupboard"
+                    size="sm"
+                    variant="ghost"
+                    onPress={() => router.push("/(tabs)/cupboard")}
+                  />
+                </View>
+                <View style={styles.card}>
+                  {runningLow.map((item, index) => (
+                    <View
+                      key={item.id}
+                      style={[styles.row, index > 0 && styles.divider]}
+                    >
+                      <Pressable
+                        onPress={() => router.push(`/edit-item?id=${item.id}`)}
+                        accessibilityRole="button"
+                        style={styles.rowText}
+                      >
+                        <Text variant="item" numberOfLines={2}>
+                          {item.name}
+                        </Text>
+                        <Text
+                          variant="caption"
+                          color={c.accentText}
+                          style={styles.semi}
+                        >
+                          {item.status === "out"
+                            ? "Out · on your list"
+                            : `${item.quantity} ${unitLabel(item.quantity, item.unit)} left`}
+                        </Text>
+                      </Pressable>
+                      <Stepper
+                        label={item.name}
+                        value={item.quantity}
+                        onChange={(q) => updateQuantity(item.id, q)}
+                      />
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+
+            <BudgetSnapshot />
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function InventoryItem({ item }: { item: Item }) {
-  const statusColor =
-    item.status === "out"
-      ? Colors.status.danger
-      : item.status === "low"
-        ? Colors.status.warning
-        : Colors.status.success;
-
-  const statusLabel =
-    item.status === "out"
-      ? "Out of stock"
-      : item.status === "low"
-        ? "Low stock"
-        : "In stock";
-
-  return (
-    <TouchableOpacity style={styles.inventoryItem}>
-      <View style={styles.itemLeft}>
-        <Text style={styles.itemName}>{item.name}</Text>
-        <Text style={styles.itemQuantity}>
-          {item.quantity} {item.unit ?? ""}
-        </Text>
-      </View>
-      <View style={styles.itemRight}>
-        <View
-          style={[styles.statusBadge, { backgroundColor: statusColor + "20" }]}
-        >
-          <Text style={[styles.statusText, { color: statusColor }]}>
-            {statusLabel}
-          </Text>
-        </View>
-        {item.store && (
-          <Text style={styles.itemStore}>
-            {item.store}
-            {item.price ? ` · £${item.price.toFixed(2)}` : ""}
-          </Text>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-function SummaryCard({
-  label,
-  value,
-  alert,
-  danger,
-}: {
-  label: string;
-  value: string;
-  alert?: boolean;
-  danger?: boolean;
-}) {
-  const valueColor = danger
-    ? Colors.status.danger
-    : alert
-      ? Colors.status.warning
-      : Colors.text.primary;
-
-  return (
-    <View style={styles.summaryCard}>
-      <Text style={[styles.summaryValue, { color: valueColor }]}>{value}</Text>
-      <Text style={styles.summaryLabel}>{label}</Text>
-    </View>
-  );
-}
-
-function DashboardSkeleton() {
-  return (
-    <View style={styles.container}>
-      <View
-        style={[
-          styles.skeletonBlock,
-          { width: "40%", height: 20, marginBottom: 8 },
-        ]}
-      />
-      <View
-        style={[
-          styles.skeletonBlock,
-          { width: "60%", height: 32, marginBottom: 24 },
-        ]}
-      />
-      <View style={styles.summaryRow}>
-        {[1, 2, 3].map((i) => (
-          <View key={i} style={[styles.summaryCard, styles.skeletonBlock]} />
-        ))}
-      </View>
-      {[1, 2, 3, 4].map((i) => (
-        <View
-          key={i}
-          style={[styles.skeletonBlock, { height: 72, marginBottom: 8 }]}
-        />
-      ))}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
+  screen: { flex: 1, backgroundColor: c.surface },
   content: {
-    padding: Spacing.s24,
-    paddingBottom: Spacing.s48,
-    flexGrow: 1,
+    paddingHorizontal: Spacing.s20,
+    paddingTop: Spacing.s16,
+    paddingBottom: Spacing.s32,
+    gap: Spacing.s16,
   },
-  centeredContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: Colors.background,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Spacing.s24,
-  },
-  greeting: {
-    fontSize: FontSize.md,
-    color: Colors.text.secondary,
-    marginBottom: 2,
-  },
-  name: {
-    fontSize: FontSize.xl,
-    fontWeight: "700",
-    color: Colors.text.primary,
-  },
+  flex: { flex: 1, minWidth: 0 },
+  semi: { fontFamily: Fonts.bodySemi },
+  start: { alignSelf: "flex-start" },
+  header: { flexDirection: "row", alignItems: "center", gap: Spacing.s12 },
   avatar: {
     width: 44,
     height: 44,
     borderRadius: Radius.pill,
-    backgroundColor: Colors.primary,
+    backgroundColor: c.inverse,
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarText: {
-    color: "#FFFFFF",
-    fontWeight: "700",
-    fontSize: FontSize.md,
-  },
-  summaryRow: {
+  session: {
     flexDirection: "row",
-    gap: Spacing.s8,
-    marginBottom: Spacing.s24,
-  },
-  summaryCard: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
+    alignItems: "center",
+    gap: Spacing.s12,
     padding: Spacing.s12,
-    alignItems: "center",
-  },
-  summaryValue: {
-    fontSize: FontSize.xl,
-    fontWeight: "700",
-  },
-  summaryLabel: {
-    fontSize: FontSize.xs,
-    color: Colors.text.secondary,
-    marginTop: Spacing.s4,
-    textAlign: "center",
-  },
-  sectionTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: "600",
-    color: Colors.text.primary,
-    marginBottom: Spacing.s12,
-  },
-  inventoryItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
-    padding: Spacing.s12,
-    marginBottom: Spacing.s8,
-  },
-  itemLeft: {
-    flex: 1,
-  },
-  itemName: {
-    fontSize: FontSize.md,
-    fontWeight: "600",
-    color: Colors.text.primary,
-  },
-  itemQuantity: {
-    fontSize: FontSize.sm,
-    color: Colors.text.secondary,
-    marginTop: Spacing.s4,
-  },
-  itemRight: {
-    alignItems: "flex-end",
-    gap: Spacing.s4,
-  },
-  statusBadge: {
-    paddingHorizontal: Spacing.s8,
-    paddingVertical: Spacing.s4,
-    borderRadius: Radius.pill,
-  },
-  statusText: {
-    fontSize: FontSize.xs,
-    fontWeight: "600",
-  },
-  itemStore: {
-    fontSize: FontSize.xs,
-    color: Colors.text.muted,
-  },
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: Spacing.s48,
-    gap: Spacing.s8,
-  },
-  emptyEmoji: {
-    fontSize: 48,
-  },
-  emptyTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: "600",
-    color: Colors.text.primary,
-  },
-  emptySubtitle: {
-    fontSize: FontSize.sm,
-    color: Colors.text.secondary,
-    textAlign: "center",
-    paddingHorizontal: Spacing.s24,
-  },
-  addButton: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.s24,
-    paddingVertical: Spacing.s8,
-    borderRadius: Radius.pill,
-    marginTop: Spacing.s8,
-  },
-  addButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
-    fontSize: FontSize.sm,
-  },
-  skeletonBlock: {
-    backgroundColor: "#E0E0E0",
-    borderRadius: Radius.md,
-  },
-  errorText: {
-    fontSize: FontSize.md,
-    color: Colors.text.secondary,
-    marginBottom: Spacing.s12,
-  },
-  retryButton: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.s24,
-    paddingVertical: Spacing.s8,
-    borderRadius: Radius.pill,
-  },
-  retryText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.s8,
-  },
-  headerAddButton: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.pill,
-    backgroundColor: Colors.surface,
+    paddingLeft: 14,
+    backgroundColor: c.surfaceRaised,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.line,
+    borderRadius: 18,
+  },
+  loading: { paddingVertical: Spacing.s48 },
+  notice: {
+    gap: Spacing.s8,
+    padding: Spacing.s20,
+    backgroundColor: c.surfaceRaised,
+    borderWidth: 1,
+    borderColor: c.line,
+    borderRadius: Radius.card,
+  },
+  stat: {
+    backgroundColor: c.inverse,
+    borderRadius: Radius.hero,
+    padding: Spacing.s20,
+    gap: Spacing.s16,
+  },
+  statTop: { flexDirection: "row", alignItems: "flex-end", gap: Spacing.s12 },
+  statText: { flex: 1, paddingBottom: 2 },
+  section: { gap: Spacing.s8 },
+  sectionHead: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
   },
-  headerAddButtonText: {
-    fontSize: FontSize.xl,
-    color: Colors.primary,
-    fontWeight: "300",
+  card: {
+    backgroundColor: c.surfaceRaised,
+    borderWidth: 1,
+    borderColor: c.line,
+    borderRadius: Radius.card,
+    overflow: "hidden",
   },
+  row: {
+    minHeight: 64,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: Spacing.s8,
+    paddingLeft: Spacing.s16,
+    paddingRight: 10,
+  },
+  divider: { borderTopWidth: 1, borderTopColor: c.lineSoft },
+  rowText: { flex: 1, minWidth: 0, gap: 2 },
 });

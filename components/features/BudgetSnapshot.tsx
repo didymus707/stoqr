@@ -1,256 +1,167 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Button } from "@/components/ui/Button";
+import { Text } from "@/components/ui/Text";
+import { Colors, Radius, Spacing } from "@/constants/theme";
 import { useBudget } from "@/hooks/useBudget";
-import { Colors, FontSize, Spacing, Radius } from "@/constants/theme";
+
+const c = Colors.light;
+const SEGMENT_COLOURS = [c.chart1, c.chart2, c.chart3, c.chart4];
+
+const money = (n: number) => `£${n.toFixed(2)}`;
 
 export default function BudgetSnapshot() {
   const { budget, loading, error } = useBudget();
-  const [expanded, setExpanded] = useState(false);
+  const [showTop, setShowTop] = useState(false);
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size={16} color={Colors.primary} />
-      </View>
-    );
-  }
-
-  if (error || !budget || budget.total_value === null) {
+  if (
+    loading ||
+    error ||
+    !budget ||
+    !budget.total_value ||
+    budget.item_count === 0
+  ) {
     return null;
   }
 
-  const { store_breakdown } = budget;
-  const maxStoreTotal = store_breakdown?.[0]?.store_total ?? 1;
+  const total = budget.total_value;
+
+  // Up to three shops, then everything else as "Other".
+  const stores = [...(budget.store_breakdown ?? [])].sort(
+    (a, b) => b.store_total - a.store_total,
+  );
+  const segments = stores
+    .slice(0, 3)
+    .map((s) => ({ label: s.store || "No shop", value: s.store_total }));
+  const rest = stores.slice(3).reduce((sum, s) => sum + s.store_total, 0);
+  if (rest > 0) segments.push({ label: "Other", value: rest });
 
   return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={() => setExpanded(!expanded)}
-      activeOpacity={0.8}
-    >
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.headerEmoji}>💰</Text>
-          <View>
-            <Text style={styles.headerTitle}>Inventory Value</Text>
-            <Text style={styles.headerSubtitle}>
-              {budget.item_count} priced{" "}
-              {budget.item_count === 1 ? "item" : "items"}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.headerRight}>
-          <Text style={styles.totalValue}>
-            £{(budget.total_value ?? 0).toFixed(2)}
-          </Text>
-          <Text style={styles.expandIcon}>{expanded ? "▲" : "▼"}</Text>
-        </View>
+    <View style={styles.card}>
+      <View style={styles.head}>
+        <Text variant="bodySm" color={c.inkMuted}>
+          What's in your cupboard is worth
+        </Text>
+        <Text variant="numberLg">{money(total)}</Text>
+        <Text variant="bodySm" color={c.inkMuted}>
+          across {budget.item_count} priced{" "}
+          {budget.item_count === 1 ? "item" : "items"}
+        </Text>
       </View>
 
-      {expanded && (
-        <View style={styles.details}>
-          {budget.store_breakdown && budget.store_breakdown.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>By Store</Text>
-              {budget.store_breakdown.map((store) => (
-                <View key={store.store} style={styles.storeRow}>
-                  <Text style={styles.storeName}>{store.store}</Text>
-                  <View style={styles.barContainer}>
-                    <View
-                      style={[
-                        styles.bar,
-                        {
-                          width: `${(store.store_total / maxStoreTotal) * 100}%`,
-                        },
-                      ]}
-                    />
-                  </View>
-                  <Text style={styles.storeTotal}>
-                    £{store.store_total.toFixed(2)}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {budget.top_items && budget.top_items.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Most Valuable Items</Text>
-              {budget.top_items.map((item, index) => (
-                <View key={index} style={styles.topItemRow}>
-                  <View style={styles.topItemRank}>
-                    <Text style={styles.rankText}>{index + 1}</Text>
-                  </View>
-                  <View style={styles.topItemInfo}>
-                    <Text style={styles.topItemName}>{item.name}</Text>
-                    <Text style={styles.topItemMeta}>
-                      {item.quantity} {item.unit ?? ""}
-                      {item.store ? ` · ${item.store}` : ""}
-                      {` · £${item.price.toFixed(2)} each`}
-                    </Text>
-                  </View>
-                  <Text style={styles.topItemValue}>
-                    £{item.item_value.toFixed(2)}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              Based on current inventory quantities and prices
-            </Text>
+      {segments.length > 0 ? (
+        <>
+          <View
+            style={styles.bar}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
+            {segments.map((s, i) => (
+              <View
+                key={s.label}
+                style={{
+                  flex: s.value / total,
+                  backgroundColor: SEGMENT_COLOURS[i % SEGMENT_COLOURS.length],
+                }}
+              />
+            ))}
           </View>
-        </View>
-      )}
-    </TouchableOpacity>
+
+          <View style={styles.legend}>
+            {segments.map((s, i) => (
+              <View key={s.label} style={styles.legendItem}>
+                <View
+                  style={[
+                    styles.swatch,
+                    {
+                      backgroundColor:
+                        SEGMENT_COLOURS[i % SEGMENT_COLOURS.length],
+                    },
+                    i === 3 && styles.swatchOutlined,
+                  ]}
+                />
+                <Text variant="bodySm" numberOfLines={1} style={styles.flex}>
+                  {s.label}
+                </Text>
+                <Text variant="code">{money(s.value)}</Text>
+              </View>
+            ))}
+          </View>
+        </>
+      ) : null}
+
+      {budget.top_items?.length ? (
+        <>
+          <Button
+            label={showTop ? "Hide top items" : "Show top items"}
+            size="sm"
+            variant="ghost"
+            onPress={() => setShowTop((v) => !v)}
+            style={styles.toggle}
+          />
+          {showTop ? (
+            <View style={styles.topList}>
+              {budget.top_items.map((item, index) => (
+                <View
+                  key={`${item.name}-${index}`}
+                  style={[styles.topRow, index > 0 && styles.divider]}
+                >
+                  <Text variant="code" color={c.inkMuted}>
+                    {String(index + 1).padStart(2, "0")}
+                  </Text>
+                  <Text variant="bodySm" numberOfLines={1} style={styles.flex}>
+                    {item.name}
+                  </Text>
+                  <Text variant="code">{money(item.item_value)}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+        </>
+      ) : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
+  flex: { flex: 1, minWidth: 0 },
+  card: {
+    backgroundColor: c.surfaceRaised,
     borderWidth: 1,
-    borderColor: Colors.border,
-    marginBottom: Spacing.s12,
-    overflow: "hidden",
+    borderColor: c.line,
+    borderRadius: Radius.hero,
+    padding: Spacing.s20,
+    gap: Spacing.s16,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: Spacing.s12,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.s8,
-  },
-  headerEmoji: {
-    fontSize: 24,
-  },
-  headerTitle: {
-    fontSize: FontSize.md,
-    fontWeight: "600",
-    color: Colors.text.primary,
-  },
-  headerSubtitle: {
-    fontSize: FontSize.xs,
-    color: Colors.text.muted,
-    marginTop: 2,
-  },
-  headerRight: {
-    alignItems: "flex-end",
-    gap: 4,
-  },
-  totalValue: {
-    fontSize: FontSize.xl,
-    fontWeight: "700",
-    color: Colors.primary,
-  },
-  expandIcon: {
-    fontSize: FontSize.xs,
-    color: Colors.text.muted,
-  },
-  details: {
-    borderTopWidth: 0.5,
-    borderTopColor: Colors.border,
-    padding: Spacing.s12,
-    gap: Spacing.s24,
-  },
-  section: {
-    gap: Spacing.s8,
-  },
-  sectionTitle: {
-    fontSize: FontSize.xs,
-    fontWeight: "600",
-    color: Colors.text.secondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: Spacing.s4,
-  },
-  storeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.s8,
-  },
-  storeName: {
-    fontSize: FontSize.sm,
-    color: Colors.text.primary,
-    width: 80,
-  },
-  barContainer: {
-    flex: 1,
-    height: 8,
-    backgroundColor: Colors.border,
-    borderRadius: Radius.pill,
-    overflow: "hidden",
-  },
+  head: { gap: Spacing.s4 },
   bar: {
-    height: "100%",
-    backgroundColor: Colors.primary,
-    borderRadius: Radius.pill,
+    flexDirection: "row",
+    gap: 2,
+    height: 14,
+    borderRadius: 7,
+    overflow: "hidden",
   },
-  storeTotal: {
-    fontSize: FontSize.sm,
-    fontWeight: "600",
-    color: Colors.text.primary,
-    width: 55,
-    textAlign: "right",
+  legend: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    rowGap: 10,
+    columnGap: Spacing.s16,
   },
-  topItemRow: {
+  legendItem: {
+    width: "46%",
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.s8,
-    paddingVertical: Spacing.s4,
-    borderBottomWidth: 0.5,
-    borderBottomColor: Colors.border,
   },
-  topItemRank: {
-    width: 24,
-    height: 24,
-    borderRadius: Radius.pill,
-    backgroundColor: Colors.primary + "15",
+  swatch: { width: 10, height: 10, borderRadius: 3 },
+  swatchOutlined: { borderWidth: 1, borderColor: c.lineStrong },
+  toggle: { alignSelf: "flex-start", marginLeft: -Spacing.s12 },
+  topList: { marginTop: -Spacing.s8 },
+  topRow: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    gap: Spacing.s12,
+    paddingVertical: 10,
   },
-  rankText: {
-    fontSize: FontSize.xs,
-    fontWeight: "700",
-    color: Colors.primary,
-  },
-  topItemInfo: {
-    flex: 1,
-  },
-  topItemName: {
-    fontSize: FontSize.sm,
-    fontWeight: "600",
-    color: Colors.text.primary,
-  },
-  topItemMeta: {
-    fontSize: FontSize.xs,
-    color: Colors.text.muted,
-    marginTop: 2,
-  },
-  topItemValue: {
-    fontSize: FontSize.sm,
-    fontWeight: "700",
-    color: Colors.text.primary,
-  },
-  footer: {
-    paddingTop: Spacing.s4,
-  },
-  footerText: {
-    fontSize: FontSize.xs,
-    color: Colors.text.muted,
-    textAlign: "center",
-  },
+  divider: { borderTopWidth: 1, borderTopColor: c.lineSoft },
 });
