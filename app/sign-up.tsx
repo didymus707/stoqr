@@ -1,338 +1,183 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
+import { Linking, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
+import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import {
+  PasswordChecks,
+  PasswordField,
+  passwordIsStrong,
+} from "@/components/ui/PasswordField";
+import { Screen } from "@/components/ui/Screen";
+import { Text } from "@/components/ui/Text";
+import { Colors, Fonts, Radius, Spacing } from "@/constants/theme";
+import { PRIVACY_POLICY_URL, TERMS_URL } from "@/lib/links";
 import { supabase } from "@/lib/supabase";
-import { Colors, FontSize, Spacing, Radius } from "../constants/theme";
-import { passwordRegex, passwordRequirementMessage } from "@/lib/utils";
 
-type FormErrors = {
-  fullName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  form: string;
-};
-
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const c = Colors.light;
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function SignUpScreen() {
   const router = useRouter();
-
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [email, setEmail] = useState<string>("");
-  const [fullName, setFullName] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState<boolean>(false);
+  const [confirm, setConfirm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [checkEmail, setCheckEmail] = useState(false);
 
-  const [errors, setErrors] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    form: "",
-  });
-
-  const clearError = (field: keyof FormErrors) => {
-    setErrors((prev) => ({ ...prev, [field]: "", form: "" }));
-  };
-
-  const validateForm = () => {
-    const newErrors: FormErrors = {
-      fullName: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      form: "",
-    };
-
-    if (!fullName.trim()) {
-      newErrors.fullName = "Full name is required";
-    }
-
-    if (!email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!emailRegex.test(email.trim())) {
-      newErrors.email = "Enter a valid email address";
-    }
-
-    if (!password) {
-      newErrors.password = "Password is required";
-    } else if (!passwordRegex.test(password)) {
-      newErrors.password = passwordRequirementMessage;
-    }
-
-    if (!confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Password do not match";
-    }
-
-    setErrors(newErrors);
-
-    return !Object.values(newErrors).some(Boolean);
-  };
+  const emailOk = EMAIL.test(email.trim());
+  const mismatch = confirm.length > 0 && confirm !== password;
+  const canSubmit =
+    name.trim() !== "" &&
+    emailOk &&
+    passwordIsStrong(password) &&
+    confirm === password &&
+    !loading;
 
   const handleSignUp = async () => {
-    if (!validateForm()) return;
-
+    if (!canSubmit) return;
     setLoading(true);
-
-    const { error } = await supabase.auth.signUp({
+    setError(null);
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: {
-        data: { full_name: fullName.trim() },
-      },
+      options: { data: { full_name: name.trim() } },
     });
-
     setLoading(false);
 
-    if (error) {
-      const friendlyMessage =
-        error.message.toLowerCase().includes("already") ||
-        error.message.toLowerCase().includes("registered")
-          ? "This email is already associated with an account."
-          : "Could not create account right now. Please try again.";
-      setErrors((prev) => ({
-        ...prev,
-        form: friendlyMessage,
-      }));
+    if (signUpError) {
+      const m = signUpError.message.toLowerCase();
+      setError(
+        m.includes("already") || m.includes("registered")
+          ? "There's already an account with this email. Sign in instead."
+          : "Couldn't create your account. Check your connection and try again.",
+      );
       return;
     }
 
-    Alert.alert(
-      "Account created! 🎉",
-      "Your account is ready. Please sign in",
-      [{ text: "OK", onPress: () => router.replace("/sign-in") }],
-    );
-
-    router.replace("/sign-in");
+    // Email confirmation off: signed in straight away, and the tabs guard sends them to setup.
+    // Email confirmation on: they need to confirm first.
+    if (data.session) router.replace("/(tabs)");
+    else setCheckEmail(true);
   };
 
+  if (checkEmail) {
+    return (
+      <Screen
+        title="Check your email"
+        subtitle={`We've sent a link to ${email.trim()}. Open it to confirm your account, then sign in.`}
+        footer={
+          <Button
+            label="Go to sign in"
+            onPress={() => router.replace("/sign-in")}
+          />
+        }
+      />
+    );
+  }
+
+  const link = (label: string, url: string) =>
+    url ? (
+      <Text
+        variant="caption"
+        style={styles.link}
+        onPress={() => Linking.openURL(url)}
+        accessibilityRole="link"
+      >
+        {label}
+      </Text>
+    ) : (
+      label
+    );
+
   return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>← Back</Text>
-      </TouchableOpacity>
-
-      <View style={styles.header}>
-        <Text style={styles.title}>Create account</Text>
-        <Text style={styles.subtitle}>Start managing your inventory</Text>
-      </View>
-
-      <View style={styles.form}>
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Full name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Adewale Didymus"
-            placeholderTextColor={Colors.text.muted}
-            value={fullName}
-            onChangeText={(text) => {
-              setFullName(text);
-              clearError("fullName");
-            }}
-            autoCapitalize="words"
-          />
-          {errors.fullName ? (
-            <Text style={styles.errorText}>{errors.fullName}</Text>
+    <Screen
+      title="Create your account"
+      subtitle="It takes a minute. Then we'll set up your cupboard."
+      footer={
+        <>
+          {error ? (
+            <Text variant="label" color={c.accentText} style={styles.center}>
+              {error}
+            </Text>
           ) : null}
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="you@example.com"
-            placeholderTextColor={Colors.text.muted}
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-          {errors.email ? (
-            <Text style={styles.errorText}>{errors.email}</Text>
-          ) : null}
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.shwPwd}>
-            <TextInput
-              style={styles.input}
-              placeholder="Min. 8 characters"
-              placeholderTextColor={Colors.text.muted}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-            />
-            <Pressable
-              onPress={() => setShowPassword((prev) => !prev)}
-              style={styles.emojiContainer}
-            >
-              <Text style={styles.emoji}>{showPassword ? "🙈" : "👁️"}</Text>
-            </Pressable>
-          </View>
-          {errors.password ? (
-            <Text style={styles.errorText}>{errors.password}</Text>
-          ) : null}
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Confirm Password</Text>
-          <View style={styles.shwPwd}>
-            <TextInput
-              style={styles.input}
-              placeholder="Min. 8 characters"
-              placeholderTextColor={Colors.text.muted}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!showConfirmPassword}
-            />
-            <Pressable
-              onPress={() => setShowConfirmPassword((prev) => !prev)}
-              style={styles.emojiContainer}
-            >
-              <Text style={styles.emoji}>
-                {showConfirmPassword ? "🙈" : "👁️"}
-              </Text>
-            </Pressable>
-          </View>
-          {errors.confirmPassword ? (
-            <Text style={styles.errorText}>{errors.confirmPassword}</Text>
-          ) : null}
-        </View>
-
-        {errors.form ? (
-          <Text style={styles.errorText}>{errors.form}</Text>
-        ) : null}
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleSignUp}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <Text style={styles.buttonText}>Create account</Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.linkButton}
-          onPress={() => router.replace("/sign-in")}
-        >
-          <Text style={styles.linkText}>
-            Already have an account?{" "}
-            <Text style={styles.linkTextBold}>Sign in</Text>
+          <Text variant="caption" color={c.inkMuted} style={styles.center}>
+            By creating an account you agree to our {link("Terms", TERMS_URL)}{" "}
+            and {link("Privacy policy", PRIVACY_POLICY_URL)}.
           </Text>
-        </TouchableOpacity>
+          <Button
+            label={loading ? "Creating account…" : "Create account"}
+            disabled={!canSubmit}
+            onPress={handleSignUp}
+          />
+          <Button
+            label="Already have an account? Sign in"
+            variant="ghost"
+            onPress={() => router.replace("/sign-in")}
+          />
+        </>
+      }
+    >
+      <View style={styles.fields}>
+        <Field
+          label="Your name"
+          value={name}
+          onChangeText={setName}
+          placeholder="Ada Okafor"
+          autoCapitalize="words"
+          autoComplete="name"
+          textContentType="name"
+        />
+        <Field
+          label="Email"
+          value={email}
+          onChangeText={setEmail}
+          placeholder="you@example.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="email"
+          textContentType="emailAddress"
+          error={
+            email.trim() && !emailOk
+              ? "Enter an email like you@example.com"
+              : null
+          }
+        />
+        <View style={styles.passwordBlock}>
+          <PasswordField
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Choose a password"
+            autoComplete="new-password"
+            textContentType="newPassword"
+          />
+          <PasswordChecks password={password} />
+        </View>
+        <PasswordField
+          label="Confirm password"
+          value={confirm}
+          onChangeText={setConfirm}
+          placeholder="Type it again"
+          autoComplete="new-password"
+          textContentType="newPassword"
+          error={mismatch ? "Passwords don't match" : null}
+        />
       </View>
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    paddingHorizontal: Spacing.s24,
-    paddingTop: Spacing.s48,
-  },
-  backButton: {
-    marginBottom: Spacing.s24,
-  },
-  backText: {
-    fontSize: FontSize.md,
-    color: Colors.primary,
-  },
-  header: {
-    marginBottom: Spacing.s32,
-  },
-  title: {
-    fontSize: FontSize.xxl,
-    fontWeight: "700",
-    color: Colors.text.primary,
-    marginBottom: Spacing.s4,
-  },
-  subtitle: {
-    fontSize: FontSize.md,
-    color: Colors.text.secondary,
-  },
-  form: {
-    gap: Spacing.s12,
-  },
-  inputGroup: {
-    gap: Spacing.s4,
-  },
-  label: {
-    fontSize: FontSize.sm,
-    fontWeight: "500",
-    color: Colors.text.primary,
-  },
-  input: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
-    padding: Spacing.s12,
-    fontSize: FontSize.md,
-    color: Colors.text.primary,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  button: {
-    backgroundColor: Colors.primary,
-    padding: Spacing.s12,
-    borderRadius: Radius.pill,
-    alignItems: "center",
-    marginTop: Spacing.s8,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: FontSize.md,
-    fontWeight: "600",
-  },
-  linkButton: {
-    alignItems: "center",
-    padding: Spacing.s8,
-  },
-  linkText: {
-    fontSize: FontSize.sm,
-    color: Colors.text.secondary,
-  },
-  linkTextBold: {
-    color: Colors.primary,
-    fontWeight: "600",
-  },
-  emoji: {
-    fontSize: 20,
-  },
-  shwPwd: {
-    position: "relative",
-    display: "flex",
-    justifyContent: "center",
-  },
-  emojiContainer: {
-    position: "absolute",
-    right: 12,
-  },
-  errorText: {
-    fontSize: FontSize.xs,
-    color: Colors.status.danger,
-    marginTop: 2,
+  fields: { gap: Spacing.s16 },
+  passwordBlock: { gap: Spacing.s8 },
+  center: { textAlign: "center" },
+  link: {
+    color: c.ink,
+    fontFamily: Fonts.bodySemi,
+    textDecorationLine: "underline",
   },
 });

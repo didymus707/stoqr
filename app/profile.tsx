@@ -1,313 +1,458 @@
-import { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
-import { useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import { Linking, Modal, Pressable, StyleSheet, View } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as Notifications from "expo-notifications";
+import Constants from "expo-constants";
+import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { Icon, IconName } from "@/components/ui/Icon";
+import { Screen } from "@/components/ui/Screen";
+import { Text } from "@/components/ui/Text";
+import { Colors, Radius, Spacing } from "@/constants/theme";
+import { useProfile } from "@/hooks/useProfile";
+import { PRIVACY_POLICY_URL } from "@/lib/links";
+import { requestNotificationPermissions } from "@/lib/notifications";
+import { formatPostcode, POSTCODE_REGEX, updateProfile } from "@/lib/setup";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/stores/auth";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors, FontSize, Spacing, Radius } from "@/constants/theme";
+
+const c = Colors.light;
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { session, signOut } = useAuth();
+  const { profile, refetch } = useProfile();
 
-  const [fullName, setFullName] = useState("");
+  const [name, setName] = useState("");
   const [postcode, setPostcode] = useState("");
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [alertsOn, setAlertsOn] = useState<boolean | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const email = session?.user?.email ?? "";
-  const initials = fullName
-    ? fullName
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : (email[0]?.toUpperCase() ?? "?");
 
+  // Fill the form once the profile loads.
   useEffect(() => {
-    fetchProfile();
-  }, [session]);
+    if (!profile) return;
+    setName(profile.full_name ?? "");
+    setPostcode(profile.postcode ?? "");
+  }, [profile]);
 
-  async function fetchProfile() {
-    if (!session?.user) return;
+  // The phone's real notification setting, re-checked when you come back from Settings.
+  useFocusEffect(
+    useCallback(() => {
+      Notifications.getPermissionsAsync().then(({ status }) =>
+        setAlertsOn(status === "granted"),
+      );
+    }, []),
+  );
 
-    setLoading(true);
+  const changed =
+    name.trim() !== (profile?.full_name ?? "").trim() ||
+    postcode.trim().toUpperCase() !== (profile?.postcode ?? "").toUpperCase();
+  const postcodeOk =
+    postcode.trim() === "" || POSTCODE_REGEX.test(postcode.trim());
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("full_name, postcode")
-      .eq("id", session.user.id)
-      .single();
+  const initials =
+    name
+      .trim()
+      .split(/\s+/)
+      .map((w) => w.charAt(0).toUpperCase())
+      .slice(0, 2)
+      .join("") ||
+    email.charAt(0).toUpperCase() ||
+    "?";
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setFullName(data?.full_name ?? "");
-      setPostcode(data?.postcode ?? "");
-    }
-
-    setLoading(false);
-  }
-
-  async function handleSave() {
-    if (!session?.user) return;
-
-    if (postcode.trim()) {
-      const postcodeRegex = /^[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}$/i;
-      if (!postcodeRegex.test(postcode.trim())) {
-        setError("Please enter a valid UK postcode (e.g. SR1 1AA)");
-        return;
-      }
-    }
-
+  const save = async () => {
+    if (!session || !changed || !postcodeOk || saving) return;
     setSaving(true);
     setError(null);
+    try {
+      await updateProfile(session.user.id, {
+        full_name: name.trim(),
+        postcode: postcode.trim() ? formatPostcode(postcode.trim()) : null,
+      });
+      await refetch();
+      setSaved(true);
+    } catch {
+      setError(
+        "Couldn't save your changes. Check your connection and try again.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        full_name: fullName.trim(),
-        postcode: postcode.trim().toUpperCase(),
-      })
-      .eq("id", session.user.id);
-
-    setSaving(false);
-
-    if (error) {
-      setError(error.message);
+  const handleAlerts = async () => {
+    if (alertsOn) {
+      Linking.openSettings(); // only the phone's Settings can turn alerts off
       return;
     }
+    const granted = await requestNotificationPermissions();
+    if (granted) setAlertsOn(true);
+    else Linking.openSettings(); // already refused once: iOS only allows changing it in Settings
+  };
 
-    Alert.alert("Saved", "Your profile has been updated.");
-  }
+  const handleSignOut = async () => {
+    await signOut();
+    router.replace("/");
+  };
 
-  async function handleDeleteAccount() {
-    Alert.alert(
-      "Delete Account",
-      "This will permanently delete your account and all your inventory data. This cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            await signOut();
-          },
-        },
-      ],
-    );
-  }
+  const handleDelete = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    const { error: rpcError } = await supabase.rpc("delete_my_account");
+    if (rpcError) {
+      setDeleting(false);
+      setDeleteError(
+        "Couldn't delete your account. Check your connection and try again.",
+      );
+      return;
+    }
+    setConfirming(false);
+    await signOut();
+    router.replace("/");
+  };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size={32} color={Colors.primary} />
-      </View>
-    );
-  }
+  const shops = profile?.preferred_stores?.length
+    ? profile.preferred_stores.join(", ")
+    : "None yet";
+  const version = Constants.expoConfig?.version;
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backText}>← Back</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>Profile</Text>
-          <TouchableOpacity onPress={handleSave} disabled={saving}>
-            {saving ? (
-              <ActivityIndicator size={16} color={Colors.primary} />
-            ) : (
-              <Text style={styles.saveText}>Save</Text>
-            )}
-          </TouchableOpacity>
+    <>
+      <Screen
+        compact
+        title="Profile"
+        footer={
+          <>
+            {error ? (
+              <Text variant="label" color={c.accentText} style={styles.center}>
+                {error}
+              </Text>
+            ) : null}
+            <Button
+              label={
+                saving
+                  ? "Saving…"
+                  : saved && !changed
+                    ? "Saved"
+                    : changed
+                      ? "Save changes"
+                      : "No changes to save"
+              }
+              disabled={!changed || !postcodeOk || saving}
+              onPress={save}
+            />
+          </>
+        }
+      >
+        <View style={styles.identity}>
+          <View style={styles.avatar}>
+            <Text variant="heading" color={c.onInverse}>
+              {initials}
+            </Text>
+          </View>
+          <View style={styles.flex}>
+            <Text variant="heading" numberOfLines={1}>
+              {name.trim() || "Your profile"}
+            </Text>
+            <Text variant="bodySm" color={c.inkMuted} numberOfLines={1}>
+              {email}
+            </Text>
+          </View>
         </View>
 
-        <ScrollView
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initials}</Text>
-            </View>
-            <Text style={styles.email}>{email}</Text>
+        <Section title="Your details">
+          <View style={styles.formCard}>
+            <Field
+              label="Your name"
+              value={name}
+              onChangeText={(t) => {
+                setName(t);
+                setSaved(false);
+              }}
+              autoCapitalize="words"
+              autoComplete="name"
+            />
+            <Field
+              label="Postcode"
+              icon="pin"
+              mono
+              value={postcode}
+              onChangeText={(t) => {
+                setPostcode(t);
+                setSaved(false);
+              }}
+              placeholder="e.g. SW16 1AA"
+              autoCapitalize="characters"
+              autoCorrect={false}
+              autoComplete="postal-code"
+              hint="Used to show prices from shoppers near you."
+              error={postcodeOk ? null : "Enter a UK postcode, like SW16 1AA"}
+            />
           </View>
+        </Section>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Personal Info</Text>
+        <Section title="Shopping">
+          <View style={styles.listCard}>
+            <Row icon="store" title="Your shops" detail={shops} first />
+            <Row
+              icon="bell"
+              title="Low-stock alerts"
+              detail={
+                alertsOn === null
+                  ? "Checking…"
+                  : alertsOn
+                    ? "On. Change this in your phone's Settings."
+                    : "Off. Tap to turn on."
+              }
+              onPress={handleAlerts}
+              trailing={
+                <View style={[styles.track, alertsOn && styles.trackOn]}>
+                  <View style={styles.knob} />
+                </View>
+              }
+            />
+          </View>
+        </Section>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Full name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Your full name"
-                placeholderTextColor={Colors.text.muted}
-                value={fullName}
-                onChangeText={setFullName}
-                autoCapitalize="words"
+        <Section title="Account">
+          <View style={styles.listCard}>
+            {PRIVACY_POLICY_URL ? (
+              <Row
+                icon="lock"
+                title="Privacy policy"
+                first
+                onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+                chevron
               />
-            </View>
+            ) : null}
+            <Row
+              icon="logout"
+              title="Sign out"
+              first={!PRIVACY_POLICY_URL}
+              onPress={handleSignOut}
+            />
+          </View>
+        </Section>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Postcode</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. SR1 1AA"
-                placeholderTextColor={Colors.text.muted}
-                value={postcode}
-                onChangeText={setPostcode}
-                autoCapitalize="characters"
-                maxLength={8}
-              />
-              <Text style={styles.hint}>
-                Used to show prices relevant to your area
+        <View style={styles.dangerZone}>
+          <Button
+            label="Delete account"
+            variant="ghost"
+            labelStyle={{ color: c.accentText }}
+            onPress={() => setConfirming(true)}
+          />
+          {version ? (
+            <Text variant="code" color={c.inkMuted}>
+              stoQr {version}
+            </Text>
+          ) : null}
+        </View>
+      </Screen>
+
+      <Modal
+        visible={confirming}
+        transparent
+        animationType="fade"
+        onRequestClose={() => !deleting && setConfirming(false)}
+      >
+        <View style={styles.backdrop}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => !deleting && setConfirming(false)}
+            accessibilityLabel="Close"
+          />
+          <View
+            style={[
+              styles.sheet,
+              { paddingBottom: insets.bottom + Spacing.s16 },
+            ]}
+            accessibilityViewIsModal
+          >
+            <View style={styles.handle} />
+            <Text variant="titleSm" accessibilityRole="header">
+              Delete your account?
+            </Text>
+            <Text variant="body" color={c.inkMuted}>
+              This permanently deletes your cupboard, shopping lists and
+              purchase history. You can't undo it.
+            </Text>
+            {deleteError ? (
+              <Text variant="label" color={c.accentText}>
+                {deleteError}
               </Text>
-            </View>
-          </View>
-
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Account</Text>
-
-            <TouchableOpacity
-              style={styles.dangerButton}
-              onPress={handleDeleteAccount}
+            ) : null}
+            <Pressable
+              onPress={handleDelete}
+              disabled={deleting}
+              accessibilityRole="button"
+              style={[styles.dangerButton, deleting && styles.dangerButtonBusy]}
             >
-              <Text style={styles.dangerButtonText}>Delete Account</Text>
-            </TouchableOpacity>
+              <Text variant="button" color={c.onAccent}>
+                {deleting ? "Deleting…" : "Delete my account"}
+              </Text>
+            </Pressable>
+            <Button
+              label="Keep my account"
+              variant="ghost"
+              disabled={deleting}
+              onPress={() => setConfirming(false)}
+            />
           </View>
-        </ScrollView>
-      </SafeAreaView>
-    </KeyboardAvoidingView>
+        </View>
+      </Modal>
+    </>
+  );
+}
+
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <View style={styles.section}>
+      <Text variant="overline" color={c.inkMuted}>
+        {title}
+      </Text>
+      {children}
+    </View>
+  );
+}
+
+function Row({
+  icon,
+  title,
+  detail,
+  first,
+  onPress,
+  chevron,
+  trailing,
+}: {
+  icon: IconName;
+  title: string;
+  detail?: string;
+  first?: boolean;
+  onPress?: () => void;
+  chevron?: boolean;
+  trailing?: React.ReactNode;
+}) {
+  const content = (
+    <>
+      <Icon name={icon} size={22} />
+      <View style={styles.flex}>
+        <Text variant="item">{title}</Text>
+        {detail ? (
+          <Text variant="caption" color={c.inkMuted}>
+            {detail}
+          </Text>
+        ) : null}
+      </View>
+      {trailing}
+      {chevron ? (
+        <Icon name="chevron" size={20} strokeWidth={2} color={c.inkSubtle} />
+      ) : null}
+    </>
+  );
+  const style = [styles.row, !first && styles.divider];
+  return onPress ? (
+    <Pressable onPress={onPress} accessibilityRole="button" style={style}>
+      {content}
+    </Pressable>
+  ) : (
+    <View style={style}>{content}</View>
   );
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
+  flex: { flex: 1, minWidth: 0 },
+  center: { textAlign: "center" },
+  identity: { flexDirection: "row", alignItems: "center", gap: 14 },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: Radius.pill,
+    backgroundColor: c.inverse,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.background,
   },
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
+  section: { gap: Spacing.s8 },
+  formCard: {
+    backgroundColor: c.surfaceRaised,
+    borderWidth: 1,
+    borderColor: c.line,
+    borderRadius: Radius.card,
+    padding: Spacing.s16,
+    gap: 14,
   },
-  header: {
+  listCard: {
+    backgroundColor: c.surfaceRaised,
+    borderWidth: 1,
+    borderColor: c.line,
+    borderRadius: Radius.card,
+    overflow: "hidden",
+  },
+  row: {
+    minHeight: 60,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.s24,
-    paddingVertical: Spacing.s12,
-    borderBottomWidth: 0.5,
-    borderBottomColor: Colors.border,
+    gap: Spacing.s12,
+    paddingVertical: 10,
+    paddingHorizontal: Spacing.s16,
   },
-  backText: {
-    fontSize: FontSize.md,
-    color: Colors.primary,
+  divider: { borderTopWidth: 1, borderTopColor: c.lineSoft },
+  track: {
+    width: 48,
+    height: 28,
+    borderRadius: 14,
+    padding: 3,
+    backgroundColor: c.lineStrong,
+    alignItems: "flex-start",
   },
-  title: {
-    fontSize: FontSize.md,
-    fontWeight: "600",
-    color: Colors.text.primary,
+  trackOn: { backgroundColor: c.inverse, alignItems: "flex-end" },
+  knob: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: c.surfaceRaised,
   },
-  saveText: {
-    fontSize: FontSize.md,
-    color: Colors.primary,
-    fontWeight: "600",
+  dangerZone: { alignItems: "center", gap: 4 },
+  backdrop: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(23,23,27,0.45)",
   },
-  content: {
-    paddingBottom: Spacing.s48,
+  sheet: {
+    backgroundColor: c.surfaceRaised,
+    borderTopLeftRadius: Radius.hero,
+    borderTopRightRadius: Radius.hero,
+    paddingTop: Spacing.s12,
+    paddingHorizontal: Spacing.s20,
+    gap: Spacing.s12,
   },
-  avatarContainer: {
-    alignItems: "center",
-    paddingVertical: Spacing.s32,
-    gap: Spacing.s8,
+  handle: {
+    alignSelf: "center",
+    width: 40,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: c.line,
   },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: Radius.pill,
-    backgroundColor: Colors.primary,
+  dangerButton: {
+    height: 56,
+    borderRadius: Radius.button,
+    backgroundColor: c.accentText,
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarText: {
-    color: "#ffffff",
-    fontSize: FontSize.xxl,
-    fontWeight: "700",
-  },
-  email: {
-    fontSize: FontSize.sm,
-    color: Colors.text.secondary,
-  },
-  section: {
-    paddingHorizontal: Spacing.s24,
-    paddingTop: Spacing.s24,
-    gap: Spacing.s12,
-  },
-  sectionTitle: {
-    fontSize: FontSize.sm,
-    fontWeight: "600",
-    color: Colors.text.secondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  inputGroup: {
-    gap: Spacing.s4,
-  },
-  label: {
-    fontSize: FontSize.sm,
-    fontWeight: "500",
-    color: Colors.text.primary,
-  },
-  input: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
-    padding: Spacing.s12,
-    fontSize: FontSize.md,
-    color: Colors.text.primary,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  hint: {
-    fontSize: FontSize.xs,
-    color: Colors.text.muted,
-  },
-  errorText: {
-    fontSize: FontSize.xs,
-    color: Colors.status.danger,
-    marginTop: Spacing.s4,
-    paddingHorizontal: Spacing.s24,
-  },
-  dangerButton: {
-    padding: Spacing.s12,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: Colors.status.danger,
-    alignItems: "center",
-  },
-  dangerButtonText: {
-    color: Colors.status.danger,
-    fontWeight: "600",
-    fontSize: FontSize.md,
-  },
+  dangerButtonBusy: { opacity: 0.6 },
 });

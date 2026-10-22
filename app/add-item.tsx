@@ -80,7 +80,7 @@ const AddItemScreen = () => {
   return (
     <Screen
       compact
-      title="Add Item"
+      title="Add item"
       footer={
         <>
           {formError ? (

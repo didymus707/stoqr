@@ -1,17 +1,14 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { supabase } from "@/lib/supabase";
-import { Colors, FontSize, Spacing, Radius } from "@/constants/theme";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Button } from "@/components/ui/Button";
+import { Text } from "@/components/ui/Text";
+import { TextField } from "@/components/ui/TextField";
+import { Colors, Radius, Spacing } from "@/constants/theme";
+import { supabase } from "@/lib/supabase";
+
+const c = Colors.light;
 
 type PriceResult = {
   store: string;
@@ -21,122 +18,181 @@ type PriceResult = {
   data_points: number;
 };
 
+const money = (n: number) => `£${n.toFixed(2)}`;
+
 export default function CompareScreen() {
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [term, setTerm] = useState(""); // what the shown results are for
   const [results, setResults] = useState<PriceResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSearch = async () => {
-    if (!search.trim()) return;
-
+    const query = search.trim();
+    if (!query || loading) return;
     setLoading(true);
     setError(null);
-    setSearched(false);
-
     try {
-      const { data, error } = await supabase.rpc("get_price_comparison", {
-        search_term: search.trim(),
-      });
-
-      if (error) throw error;
-
-      setResults(data || []);
+      const { data, error: rpcError } = await supabase.rpc(
+        "get_price_comparison",
+        { search_term: query },
+      );
+      if (rpcError) throw rpcError;
+      const sorted = [...(data ?? [])].sort(
+        (a: PriceResult, b: PriceResult) => a.avg_price - b.avg_price,
+      );
+      setResults(sorted);
+      setTerm(query);
       setSearched(true);
-    } catch (err: any) {
-      setError(err.message);
+    } catch {
+      setError("Couldn't load prices. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Compare Prices</Text>
-        <Text style={styles.subtitle}>Based on prices logged by S users</Text>
-      </View>
+  const maxPrice = results.reduce((m, r) => Math.max(m, r.avg_price), 0) || 1;
+  const totalReports = results.reduce((sum, r) => sum + r.data_points, 0);
 
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search for an item..."
-          placeholderTextColor={Colors.text.muted}
-          value={search}
-          onChangeText={(text) => {
-            setSearch(text);
-            if (!text.trim()) {
-              setSearched(false);
-              setResults([]);
-            }
-          }}
-          onSubmitEditing={handleSearch}
-          returnKeyType="search"
-          autoCapitalize="none"
-        />
-        <TouchableOpacity
-          style={[styles.searchButton, loading && styles.searchButtonDisabled]}
-          onPress={handleSearch}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator size={16} color="#ffffff" />
-          ) : (
-            <Text style={styles.searchButtonText}>Search</Text>
-          )}
-        </TouchableOpacity>
+  return (
+    <SafeAreaView edges={["top"]} style={styles.screen}>
+      <View style={styles.top}>
+        <View style={styles.titleBlock}>
+          <Text variant="title" accessibilityRole="header">
+            Compare prices
+          </Text>
+          <Text variant="bodySm" color={c.inkMuted}>
+            Prices shared by stoQr shoppers, per single item.
+          </Text>
+        </View>
+        <View style={styles.searchRow}>
+          <TextField
+            icon="search"
+            containerStyle={styles.flex}
+            value={search}
+            onChangeText={(text) => {
+              setSearch(text);
+              if (!text.trim()) {
+                setSearched(false);
+                setResults([]);
+              }
+            }}
+            onSubmitEditing={handleSearch}
+            placeholder="Milk, rice, toilet roll…"
+            returnKeyType="search"
+            autoCapitalize="none"
+            autoCorrect={false}
+            accessibilityLabel="Search for an item"
+          />
+          <Button
+            label="Search"
+            size="sm"
+            variant="secondary"
+            disabled={!search.trim() || loading}
+            onPress={handleSearch}
+          />
+        </View>
       </View>
 
       <ScrollView
-        style={styles.results}
-        contentContainerStyle={styles.resultsContent}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {error ? (
-          <View style={styles.centeredContainer}>
-            <Text style={styles.errorText}>{error}</Text>
+        {loading ? (
+          <View style={styles.loading}>
+            <ActivityIndicator color={c.accent} />
           </View>
+        ) : error ? (
+          <Text variant="bodySm" color={c.accentText}>
+            {error}
+          </Text>
         ) : !searched ? (
-          <View style={styles.centeredContainer}>
-            <Text style={styles.emptyEmoji}>💰</Text>
-            <Text style={styles.emptyTitle}>Compare prices</Text>
-            <Text style={styles.emptySubtitle}>
-              Search for any item to see where it's cheapest near you
+          <View style={styles.notice}>
+            <Text variant="heading">Find the cheapest shop</Text>
+            <Text variant="bodySm" color={c.inkMuted}>
+              Search for something you buy and see what people near you paid at
+              each shop.
             </Text>
           </View>
         ) : results.length === 0 ? (
-          <View style={styles.centeredContainer}>
-            <Text style={styles.emptyEmoji}>🔍</Text>
-            <Text style={styles.emptyTitle}>No results found</Text>
-            <Text style={styles.emptySubtitle}>
-              No one has logged prices for "{search}" yet.{"\n"}
-              Add it to your inventory with a store and price to be the first!
+          <View style={styles.notice}>
+            <Text variant="heading">No prices for "{term}" yet</Text>
+            <Text variant="bodySm" color={c.inkMuted}>
+              Add it to your cupboard with the price you paid, and you'll be the
+              first to share one.
             </Text>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => router.push("/add-item")}
-            >
-              <Text style={styles.addButtonText}>
-                Add {search} to your inventory
-              </Text>
-            </TouchableOpacity>
+            <Button
+              label={`Add ${term} to your cupboard`}
+              size="sm"
+              onPress={() =>
+                router.push(`/add-item?name=${encodeURIComponent(term)}`)
+              }
+              style={styles.start}
+            />
           </View>
         ) : (
-          <View>
-            <Text style={styles.resultsTitle}>Results for "{search}"</Text>
-            {results.map((result, index) => (
-              <PriceCard
-                key={result.store}
-                result={result}
-                rank={index + 1}
-                isCheapest={index === 0}
-              />
-            ))}
-            <Text style={styles.disclaimer}>
-              Prices are averaged from user-submitted data. Actual prices may
-              vary by location.
+          <View style={styles.section}>
+            <View style={styles.sectionHead}>
+              <Text variant="overline" color={c.inkMuted}>
+                Results for "{term}"
+              </Text>
+              <Text variant="caption" color={c.inkMuted}>
+                {totalReports} {totalReports === 1 ? "price" : "prices"}
+              </Text>
+            </View>
+            <View style={styles.card}>
+              {results.map((r, index) => {
+                const cheapest = index === 0;
+                return (
+                  <View
+                    key={r.store}
+                    style={[styles.row, index > 0 && styles.divider]}
+                  >
+                    <View style={styles.rowTop}>
+                      <View style={styles.flex}>
+                        <View style={styles.storeLine}>
+                          <Text variant="item">{r.store}</Text>
+                          {cheapest && results.length > 1 ? (
+                            <View style={styles.pill}>
+                              <Text variant="pill" color={c.onAccent}>
+                                Cheapest
+                              </Text>
+                            </View>
+                          ) : null}
+                        </View>
+                        <Text variant="caption" color={c.inkMuted}>
+                          {r.data_points}{" "}
+                          {r.data_points === 1
+                            ? "price shared"
+                            : "prices shared"}
+                          {r.min_price !== r.max_price
+                            ? ` · ${money(r.min_price)} – ${money(r.max_price)}`
+                            : ""}
+                        </Text>
+                      </View>
+                      <Text variant="price">{money(r.avg_price)}</Text>
+                    </View>
+                    <View style={styles.track}>
+                      <View
+                        style={[
+                          styles.fill,
+                          {
+                            width: `${Math.round((r.avg_price / maxPrice) * 100)}%`,
+                            backgroundColor: cheapest ? c.accent : c.chart3,
+                          },
+                        ]}
+                      />
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+            <Text variant="caption" color={c.inkMuted}>
+              Averages of prices shoppers have recorded. What you pay may differ
+              by shop and area.
             </Text>
           </View>
         )}
@@ -145,202 +201,59 @@ export default function CompareScreen() {
   );
 }
 
-function PriceCard({
-  result,
-  rank,
-  isCheapest,
-}: {
-  result: PriceResult;
-  rank: number;
-  isCheapest: boolean;
-}) {
-  const medal =
-    rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `${rank}.`;
-
-  return (
-    <View style={[styles.priceCard, isCheapest && styles.priceCardCheapest]}>
-      <View style={styles.priceCardLeft}>
-        <Text style={styles.medal}>{medal}</Text>
-        <View>
-          <Text style={styles.storeName}>{result.store}</Text>
-          <Text style={styles.dataPoints}>
-            {result.data_points}{" "}
-            {result.data_points === 1 ? "price logged" : "prices logged"}
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.priceCardRight}>
-        <Text style={[styles.avgPrice, isCheapest && styles.avgPriceCheapest]}>
-          £{result.avg_price.toFixed(2)}
-        </Text>
-        {result.min_price !== result.max_price && (
-          <Text style={styles.priceRange}>
-            £{result.min_price.toFixed(2)} – £{result.max_price.toFixed(2)}
-          </Text>
-        )}
-      </View>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
+  screen: { flex: 1, backgroundColor: c.surface },
+  flex: { flex: 1, minWidth: 0 },
+  start: { alignSelf: "flex-start" },
+  top: {
+    paddingHorizontal: Spacing.s20,
+    paddingTop: Spacing.s16,
+    gap: Spacing.s12,
   },
-  header: {
-    paddingHorizontal: Spacing.s24,
-    paddingTop: Spacing.s12,
-    paddingBottom: Spacing.s8,
+  titleBlock: { gap: 2 },
+  searchRow: { flexDirection: "row", alignItems: "center", gap: Spacing.s8 },
+  content: {
+    paddingHorizontal: Spacing.s20,
+    paddingTop: Spacing.s16,
+    paddingBottom: Spacing.s32,
+    gap: Spacing.s16,
   },
-  title: {
-    fontSize: FontSize.xxl,
-    fontWeight: "700",
-    color: Colors.text.primary,
-  },
-  subtitle: {
-    fontSize: FontSize.sm,
-    color: Colors.text.muted,
-    marginTop: 2,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    paddingHorizontal: Spacing.s24,
+  loading: { paddingVertical: Spacing.s48 },
+  notice: {
     gap: Spacing.s8,
-    marginBottom: Spacing.s12,
-  },
-  searchInput: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
-    padding: Spacing.s12,
-    fontSize: FontSize.md,
-    color: Colors.text.primary,
+    padding: Spacing.s20,
+    backgroundColor: c.surfaceRaised,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.line,
+    borderRadius: Radius.card,
   },
-  searchButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.s24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  searchButtonDisabled: {
-    opacity: 0.6,
-  },
-  searchButtonText: {
-    color: "#ffffff",
-    fontWeight: "600",
-    fontSize: FontSize.sm,
-  },
-  results: {
-    flex: 1,
-  },
-  resultsContent: {
-    paddingHorizontal: Spacing.s24,
-    paddingBottom: Spacing.s48,
-    flexGrow: 1,
-  },
-  centeredContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: Spacing.s48,
-    gap: Spacing.s8,
-  },
-  emptyEmoji: {
-    fontSize: 40,
-  },
-  emptyTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: "600",
-    color: Colors.text.primary,
-  },
-  emptySubtitle: {
-    fontSize: FontSize.sm,
-    color: Colors.text.secondary,
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  resultsTitle: {
-    fontSize: FontSize.md,
-    fontWeight: "600",
-    color: Colors.text.secondary,
-    marginBottom: Spacing.s12,
-  },
-  priceCard: {
+  section: { gap: Spacing.s8 },
+  sectionHead: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
-    padding: Spacing.s12,
-    marginBottom: Spacing.s8,
+    alignItems: "baseline",
+  },
+  card: {
+    backgroundColor: c.surfaceRaised,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.line,
+    borderRadius: Radius.card,
+    overflow: "hidden",
   },
-  priceCardCheapest: {
-    borderColor: Colors.status.success,
-    backgroundColor: Colors.status.success + "08",
-  },
-  priceCardLeft: {
-    flexDirection: "row",
-    alignItems: "center",
+  row: {
+    paddingVertical: Spacing.s12,
+    paddingHorizontal: Spacing.s16,
     gap: Spacing.s8,
   },
-  medal: {
-    fontSize: 24,
-  },
-  storeName: {
-    fontSize: FontSize.md,
-    fontWeight: "600",
-    color: Colors.text.primary,
-  },
-  dataPoints: {
-    fontSize: FontSize.xs,
-    color: Colors.text.muted,
-    marginTop: 2,
-  },
-  priceCardRight: {
-    alignItems: "flex-end",
-  },
-  avgPrice: {
-    fontSize: FontSize.xl,
-    fontWeight: "700",
-    color: Colors.text.primary,
-  },
-  avgPriceCheapest: {
-    color: Colors.status.success,
-  },
-  priceRange: {
-    fontSize: FontSize.xs,
-    color: Colors.text.muted,
-    marginTop: 2,
-  },
-  disclaimer: {
-    fontSize: FontSize.xs,
-    color: Colors.text.muted,
-    textAlign: "center",
-    paddingTop: Spacing.s12,
-    lineHeight: 18,
-  },
-  errorText: {
-    fontSize: FontSize.sm,
-    color: Colors.status.danger,
-    textAlign: "center",
-  },
-  addButton: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.s24,
-    paddingVertical: Spacing.s8,
+  divider: { borderTopWidth: 1, borderTopColor: c.lineSoft },
+  rowTop: { flexDirection: "row", alignItems: "center", gap: Spacing.s12 },
+  storeLine: { flexDirection: "row", alignItems: "center", gap: Spacing.s8 },
+  pill: {
+    backgroundColor: c.accent,
     borderRadius: Radius.pill,
-    marginTop: Spacing.s8,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
   },
-  addButtonText: {
-    color: "#ffffff",
-    fontWeight: "600",
-    fontSize: FontSize.sm,
-  },
+  track: { height: 6, borderRadius: 3, backgroundColor: c.lineSoft },
+  fill: { height: 6, borderRadius: 3 },
 });

@@ -1,439 +1,302 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-} from "react-native";
-import { Item } from "@/types/database";
+import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
-import { supabase } from "@/lib/supabase";
-import { useInventory } from "@/hooks/useInventory";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useActionSheet } from "@expo/react-native-action-sheet";
-import { Colors, FontSize, Spacing, Radius } from "@/constants/theme";
+import { Chip } from "@/components/ui/Chip";
+import { IconButton } from "@/components/ui/IconButton";
+import { Stepper } from "@/components/ui/Stepper";
+import { Text } from "@/components/ui/Text";
+import { TextField } from "@/components/ui/TextField";
+import { Colors, Fonts, Radius, Spacing } from "@/constants/theme";
+import { useInventory } from "@/hooks/useInventory";
+import { supabase } from "@/lib/supabase";
+import { unitLabel } from "@/lib/unit";
+import { Item } from "@/types/database";
 
-type FilterStatus = "all" | "in_stock" | "low" | "out";
+const c = Colors.light;
 
-const filterLabels: Record<FilterStatus, string> = {
-  all: "All",
-  in_stock: "In Stock",
-  low: "Low Stock",
-  out: "Out of stock",
+type Filter = "all" | "low" | "out" | "ok";
+
+const STATUS_WORD: Record<Item["status"], string> = {
+  ok: "Stocked",
+  low: "Low",
+  out: "Out",
 };
 
-const getUnitLabel = (quantity: number, unit: string): string => {
-  if (quantity === 1) return unit;
+export default function CupboardScreen() {
+  const router = useRouter();
+  const { showActionSheetWithOptions } = useActionSheet();
+  const { items, loading, error, refetch, updateQuantity } = useInventory();
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<Filter>("all");
 
-  const plurals: Record<string, string> = {
-    box: "boxes",
-    loaf: "loaves",
-    pc: "pcs",
-    litre: "litres",
+  const counts = {
+    low: items.filter((i) => i.status === "low").length,
+    out: items.filter((i) => i.status === "out").length,
   };
 
-  // Metric abbreviations (kg, g, ml) don't typically change
-  const staysSingular = ["kg", "g", "ml"];
+  const query = search.trim().toLowerCase();
+  const visible = items
+    .filter((i) => i.name.toLowerCase().includes(query))
+    .filter((i) => filter === "all" || i.status === filter);
 
-  if (staysSingular.includes(unit)) return unit;
+  const editItem = (item: Item) => router.push(`/edit-item?id=${item.id}`);
 
-  return plurals[unit] || `${unit}s`;
-};
+  const deleteItem = (item: Item) =>
+    Alert.alert(
+      `Delete ${item.name}?`,
+      "It will be removed from your cupboard.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            const { error: deleteError } = await supabase
+              .from("items")
+              .delete()
+              .eq("id", item.id);
+            if (deleteError)
+              Alert.alert(
+                "Couldn't delete",
+                "Check your connection and try again.",
+              );
+            refetch();
+          },
+        },
+      ],
+    );
 
-export default function InventoryScreen() {
-  const router = useRouter();
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<FilterStatus>("all");
-  const { items, loading, refetch, updateQuantity } = useInventory();
-  const { showActionSheetWithOptions } = useActionSheet();
-
-  const handleMoreOptions = (item: Item) => {
+  const openOptions = (item: Item) =>
     showActionSheetWithOptions(
       {
+        title: item.name,
         options: ["Edit", "Delete", "Cancel"],
         destructiveButtonIndex: 1,
         cancelButtonIndex: 2,
-        title: item.name,
       },
-      (selectedIndex) => {
-        switch (selectedIndex) {
-          case 0:
-            router.push(`/edit-item?id=${item.id}`);
-            break;
-          case 1:
-            handleDelete(item);
-            break;
-        }
+      (index) => {
+        if (index === 0) editItem(item);
+        if (index === 1) deleteItem(item);
       },
     );
-  };
 
-  const emptyTitle = search
-    ? "No items found"
-    : filter === "all"
-      ? "No items yet"
-      : `No ${filterLabels[filter]} items`;
-
-  const emptySubtitle = search
-    ? `No results for "${search}"`
-    : filter === "all"
-      ? "Tap + to add your first item"
-      : "Try adjusting your filter";
-
-  const filtered = items
-    .filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
-    .filter((item) => {
-      if (filter === "all") return true;
-      if (filter === "in_stock") {
-        return item.status === "low" || item.status === "ok";
-      }
-
-      return item.status === filter;
-    });
-
-  async function handleDelete(item: Item) {
-    Alert.alert(`Delete ${item.name}?`, "This action cannot be undone.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          const { error } = await supabase
-            .from("items")
-            .delete()
-            .eq("id", item.id);
-
-          if (error) {
-            Alert.alert("Error", error.message);
-            return;
-          }
-
-          refetch();
-        },
-      },
-    ]);
-  }
+  const emptyText = query
+    ? { title: "Nothing found", body: `No items match "${search.trim()}".` }
+    : filter !== "all"
+      ? { title: "Nothing here", body: "No items match this filter." }
+      : {
+          title: "Your cupboard is empty",
+          body: "Tap + to add the things you keep at home.",
+        };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Inventory</Text>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => router.push("/add-item")}
-        >
-          <Text style={styles.addButtonText}>+</Text>
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView edges={["top"]} style={styles.screen}>
+      <View style={styles.top}>
+        <View style={styles.titleRow}>
+          <View style={styles.titleText}>
+            <Text variant="title" accessibilityRole="header">
+              Cupboard
+            </Text>
+            {items.length > 0 ? (
+              <Text variant="code" color={c.inkMuted}>
+                {items.length} {items.length === 1 ? "item" : "items"}
+              </Text>
+            ) : null}
+          </View>
+          <IconButton
+            icon="add"
+            label="Add an item"
+            variant="inverse"
+            onPress={() => router.push("/add-item")}
+          />
+        </View>
 
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search items..."
-          placeholderTextColor={Colors.text.muted}
+        <TextField
+          icon="search"
           value={search}
           onChangeText={setSearch}
+          placeholder="Search milk, rice, nappies…"
           autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="search"
+          accessibilityLabel="Search your cupboard"
         />
-      </View>
 
-      <View style={styles.filterRow}>
-        {(["all", "in_stock", "low", "out"] as FilterStatus[]).map((f) => (
-          <TouchableOpacity
-            key={f}
-            style={[styles.filterChip, filter === f && styles.filterChipActive]}
-            onPress={() => setFilter(f)}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                filter === f && styles.filterChipTextActive,
-              ]}
-            >
-              {filterLabels[f]}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {loading ? (
-        <View style={styles.centeredContainer}>
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      ) : filtered.length === 0 ? (
-        <View style={styles.centeredContainer}>
-          <Text style={styles.emptyEmoji}>📦</Text>
-          <Text style={styles.emptyTitle}>{emptyTitle}</Text>
-          <Text style={styles.emptySubtitle}>{emptySubtitle}</Text>
-        </View>
-      ) : (
         <ScrollView
-          style={styles.list}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chips}
         >
-          {filtered.map((item) => (
-            <InventoryItemRow
-              key={item.id}
-              item={item}
-              onEdit={() => router.push(`/edit-item?id=${item.id}`)}
-              onMoreOptions={() => handleMoreOptions(item)}
-              onUpdateQuantity={(newQty) => updateQuantity(item.id, newQty)}
-            />
-          ))}
-          <Text style={styles.itemCount}>
-            {filtered.length} {filtered.length === 1 ? "item" : "items"}
-          </Text>
+          <Chip
+            label="All"
+            selected={filter === "all"}
+            onPress={() => setFilter("all")}
+          />
+          <Chip
+            label="Low"
+            count={counts.low}
+            selected={filter === "low"}
+            onPress={() => setFilter("low")}
+          />
+          <Chip
+            label="Out"
+            count={counts.out}
+            selected={filter === "out"}
+            onPress={() => setFilter("out")}
+          />
+          <Chip
+            label="Stocked"
+            selected={filter === "ok"}
+            onPress={() => setFilter("ok")}
+          />
         </ScrollView>
-      )}
+      </View>
+
+      <ScrollView
+        style={styles.flex}
+        contentContainerStyle={styles.listContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {loading && items.length === 0 ? (
+          <Text variant="bodySm" color={c.inkMuted} style={styles.center}>
+            Loading your cupboard…
+          </Text>
+        ) : error ? (
+          <Text variant="bodySm" color={c.accentText} style={styles.center}>
+            Couldn't load your cupboard. Pull down or reopen the tab to try
+            again.
+          </Text>
+        ) : visible.length === 0 ? (
+          <View style={styles.empty}>
+            <Text variant="heading">{emptyText.title}</Text>
+            <Text variant="bodySm" color={c.inkMuted} style={styles.center}>
+              {emptyText.body}
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.card}>
+            {visible.map((item, index) => (
+              <CupboardRow
+                key={item.id}
+                item={item}
+                first={index === 0}
+                onOpen={() => editItem(item)}
+                onOptions={() => openOptions(item)}
+                onDelete={() => deleteItem(item)}
+                onQuantityChange={(qty) => updateQuantity(item.id, qty)}
+              />
+            ))}
+          </View>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
-const InventoryItemRow = ({
-  item,
-  onUpdateQuantity,
-  onMoreOptions,
-  onEdit,
-}: {
+type RowProps = {
   item: Item;
-  onUpdateQuantity: (newQty: number) => void;
-  onMoreOptions: () => void;
-  onEdit: () => void;
-}) => {
-  const statusColor =
-    item.status === "out"
-      ? Colors.status.danger
-      : item.status === "low"
-        ? Colors.status.warning
-        : Colors.status.success;
-
-  const handleDecrement = () => {
-    if (item.quantity <= 0) return;
-    onUpdateQuantity(item.quantity - 1);
-  };
-
-  const handleIncrement = () => {
-    onUpdateQuantity(item.quantity + 1);
-  };
-
-  return (
-    <View style={styles.itemRow}>
-      <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-
-      <TouchableOpacity style={styles.itemInfo} onLongPress={onEdit}>
-        <Text style={styles.itemName}>{item.name}</Text>
-        <Text style={styles.itemMeta}>
-          {item.quantity}
-          {item.unit ? ` ${getUnitLabel(item.quantity, item.unit)}` : ""}
-          {item.store ? ` · ${item.store}` : ""}
-          {item.price ? ` · £${item.price.toFixed(2)}` : ""}
-        </Text>
-      </TouchableOpacity>
-
-      <View style={styles.qtyGroup}>
-        <TouchableOpacity
-          style={[
-            styles.qtyButton,
-            item.quantity <= 0 && styles.qtyButtonDisabled,
-          ]}
-          onPress={handleDecrement}
-          disabled={item.quantity <= 0}
-        >
-          <Text style={styles.qtyButtonText}>−</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.qtyValue}>{item.quantity}</Text>
-
-        <TouchableOpacity style={styles.qtyButton} onPress={handleIncrement}>
-          <Text style={styles.qtyButtonText}>+</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity style={styles.moreButton} onPress={onMoreOptions}>
-        <Text style={styles.moreButtonText}>⋯</Text>
-      </TouchableOpacity>
-    </View>
-  );
+  first: boolean;
+  onOpen: () => void;
+  onOptions: () => void;
+  onDelete: () => void;
+  onQuantityChange: (qty: number) => void;
 };
 
+function CupboardRow({
+  item,
+  first,
+  onOpen,
+  onOptions,
+  onDelete,
+  onQuantityChange,
+}: RowProps) {
+  const statusColor = item.status === "ok" ? c.ok : c.accentText;
+  const meta = [
+    `${item.quantity} ${unitLabel(item.quantity, item.unit)}`.trim(),
+    item.store,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  return (
+    <View style={[styles.row, !first && styles.divider]}>
+      <Pressable
+        onPress={onOpen}
+        onLongPress={onOptions}
+        accessibilityRole="button"
+        accessibilityLabel={`${item.name}, ${meta}, ${STATUS_WORD[item.status]}`}
+        accessibilityHint="Opens the item. Long press for more options."
+        accessibilityActions={[{ name: "delete", label: "Delete item" }]}
+        onAccessibilityAction={(e) =>
+          e.nativeEvent.actionName === "delete" && onDelete()
+        }
+        style={styles.rowMain}
+      >
+        <Text variant="item" numberOfLines={2}>
+          {item.name}
+        </Text>
+        <Text variant="caption" color={c.inkMuted}>
+          {meta ? `${meta} · ` : ""}
+          <Text variant="caption" color={statusColor} style={styles.semi}>
+            {STATUS_WORD[item.status]}
+          </Text>
+        </Text>
+      </Pressable>
+      <Stepper
+        label={item.name}
+        value={item.quantity}
+        onChange={onQuantityChange}
+      />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
+  screen: { flex: 1, backgroundColor: c.surface },
+  flex: { flex: 1 },
+  center: { textAlign: "center" },
+  semi: { fontFamily: Fonts.bodySemi },
+  top: {
+    paddingHorizontal: Spacing.s20,
+    paddingTop: Spacing.s16,
+    gap: Spacing.s12,
   },
-  header: {
+  titleRow: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: Spacing.s24,
-    paddingVertical: Spacing.s12,
   },
-  title: {
-    fontSize: FontSize.xxl,
-    fontWeight: "700",
-    color: Colors.text.primary,
-  },
-  addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.pill,
-    backgroundColor: Colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  addButtonText: {
-    fontSize: FontSize.xl,
-    color: "#ffffff",
-    fontWeight: "300",
-  },
-  searchContainer: {
-    paddingHorizontal: Spacing.s24,
-    marginBottom: Spacing.s8,
-  },
-  searchInput: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
-    padding: Spacing.s12,
-    fontSize: FontSize.md,
-    color: Colors.text.primary,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  filterRow: {
-    flexDirection: "row",
-    paddingHorizontal: Spacing.s24,
-    gap: Spacing.s4,
-    marginBottom: Spacing.s12,
-  },
-  filterChip: {
-    paddingHorizontal: Spacing.s8,
-    paddingVertical: Spacing.s4,
-    borderRadius: Radius.pill,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  filterChipActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  filterChipText: {
-    fontSize: FontSize.xs,
-    color: Colors.text.secondary,
-    fontWeight: "500",
-  },
-  filterChipTextActive: {
-    color: "#ffffff",
-  },
-  list: {
-    flex: 1,
-  },
+  titleText: { flexDirection: "row", alignItems: "baseline", gap: 10 },
+  chips: { gap: Spacing.s8, paddingBottom: 2 },
   listContent: {
-    paddingHorizontal: Spacing.s24,
-    paddingBottom: Spacing.s48,
-  },
-  itemRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: Spacing.s12,
-    borderBottomWidth: 0.5,
-    borderBottomColor: Colors.border,
-    gap: Spacing.s8,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: Radius.pill,
-  },
-  itemInfo: {
-    flex: 1,
-  },
-  itemName: {
-    fontSize: FontSize.md,
-    fontWeight: "600",
-    color: Colors.text.primary,
-  },
-  itemMeta: {
-    fontSize: FontSize.xs,
-    color: Colors.text.muted,
-    marginTop: 2,
-  },
-  centeredContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Spacing.s8,
-  },
-  loadingText: {
-    fontSize: FontSize.md,
-    color: Colors.text.muted,
-  },
-  emptyEmoji: {
-    fontSize: 40,
-  },
-  emptyTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: "600",
-    color: Colors.text.primary,
-  },
-  emptySubtitle: {
-    fontSize: FontSize.sm,
-    color: Colors.text.secondary,
-    textAlign: "center",
-  },
-  itemCount: {
-    fontSize: FontSize.xs,
-    color: Colors.text.muted,
-    textAlign: "center",
+    paddingHorizontal: Spacing.s20,
     paddingTop: Spacing.s12,
+    paddingBottom: Spacing.s32,
   },
-  qtyGroup: {
+  card: {
+    backgroundColor: c.surfaceRaised,
+    borderWidth: 1,
+    borderColor: c.line,
+    borderRadius: Radius.card,
+    overflow: "hidden",
+  },
+  row: {
+    minHeight: 64,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.pill,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: 4,
-    paddingVertical: 4,
-    gap: 4,
+    gap: 10,
+    paddingVertical: Spacing.s8,
+    paddingLeft: Spacing.s16,
+    paddingRight: 10,
   },
-  qtyButton: {
-    width: 24,
-    height: 24,
-    borderRadius: Radius.pill,
+  divider: { borderTopWidth: 1, borderTopColor: c.lineSoft },
+  rowMain: { flex: 1, minWidth: 0, gap: 2 },
+  empty: {
     alignItems: "center",
-    justifyContent: "center",
-  },
-  qtyButtonDisabled: {
-    opacity: 0.3,
-  },
-  qtyButtonText: {
-    fontSize: FontSize.md,
-    color: Colors.text.primary,
-    fontWeight: "500",
-    lineHeight: 16,
-  },
-  qtyValue: {
-    fontSize: FontSize.sm,
-    color: Colors.text.primary,
-    fontWeight: "600",
-    minWidth: 20,
-    textAlign: "center",
-  },
-  moreButton: {
-    width: 28,
-    height: 28,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  moreButtonText: {
-    fontSize: FontSize.md,
-    color: Colors.text.muted,
-    fontWeight: "600",
+    gap: Spacing.s8,
+    paddingVertical: Spacing.s48,
   },
 });

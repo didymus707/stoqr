@@ -24,6 +24,8 @@ export default function RootLayout() {
     if (fontsLoaded || fontError) SplashScreen.hideAsync();
   }, [fontsLoaded, fontError]);
 
+  if (!fontsLoaded && !fontError) return null;
+  
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>

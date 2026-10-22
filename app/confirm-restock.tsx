@@ -201,7 +201,7 @@ const ConfirmRestock = () => {
 
   if (loading) {
     return (
-      <Screen compact title="Confirm Restock">
+      <Screen compact title="Confirm restock">
         <View style={styles.loading}>
           <ActivityIndicator size={Spacing.s12} color={c.accent} />
         </View>
@@ -212,7 +212,7 @@ const ConfirmRestock = () => {
   return (
     <Screen
       compact
-      title="Confirm Restock"
+      title="Confirm restock"
       footer={
         items.length > 0 || removed ? (
           <>
@@ -239,7 +239,7 @@ const ConfirmRestock = () => {
               </Text>
             ) : null}
             <Button
-              label={isSubmitting ? "Confirming..." : "Confirm Restock"}
+              label={isSubmitting ? "Confirming..." : "Confirm restock"}
               value={`£${total.toFixed(2)}`}
               disabled={!canSubmit}
               onPress={handleConfirm}
