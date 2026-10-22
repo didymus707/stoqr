@@ -17,7 +17,7 @@ export const Stepper = ({ value, onChange, min = 0, label }: Props) => {
 
   return (
     <View
-      style={{}}
+      style={styles.wrap}
       accessible
       accessibilityRole="adjustable"
       accessibilityLabel={label}
@@ -45,7 +45,9 @@ export const Stepper = ({ value, onChange, min = 0, label }: Props) => {
         variant="numberMd"
         color={value === 0 ? c.inkSubtle : c.ink}
         style={styles.value}
-      ></Text>
+      >
+        {value}
+      </Text>
       <Pressable onPress={() => onChange(value + 1)} style={styles.button}>
         <Icon name="add" size={20} strokeWidth={2} />
       </Pressable>

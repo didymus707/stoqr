@@ -13,7 +13,6 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  TextInput,
   View,
 } from "react-native";
 import {
@@ -21,22 +20,43 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { TextField } from "@/components/ui/TextField";
+import { Screen } from "@/components/ui/Screen";
+import { Field } from "@/components/ui/Field";
+import { unitLabel } from "@/lib/unit";
+import { Stepper } from "@/components/ui/Stepper";
 
-interface RestockItem {
+const c = Colors.light;
+
+type RestockItem = {
   id: string;
   name: string;
   quantity: number;
   unit: string | null;
   price: number | null;
+  pack_size: number;
+  pack_price: number | null;
   low_stock_threshold: number;
-}
+};
 
-interface ItemFormState {
-  quantity: string;
-  unitPrice: string;
-}
+type RowState = { packs: number; packPrice: string };
 
-const c = Colors.light;
+const toPrice = (value: string) => {
+  const num = Number(value.replace(",", "."));
+  return value.trim() !== "" && Number.isFinite(num) && num >= 0 ? num : null;
+};
+
+const suggestedPacks = (item: RestockItem) => {
+  const size = item.pack_size || 1;
+  const needed = item.low_stock_threshold + 1 - item.quantity;
+  return Math.max(1, Math.ceil(needed / size));
+};
+
+const lastPackPrice = (item: RestockItem) => {
+  const size = item.pack_size || 1;
+  const price =
+    item.pack_price ?? (item.price !== null ? item.price * size : null);
+  return price !== null ? String(Number(price.toFixed(2))) : "";
+};
 
 const ConfirmRestock = () => {
   const router = useRouter();
@@ -45,130 +65,119 @@ const ConfirmRestock = () => {
   const { activeStore, setActiveStore, setCheckedLowStock } =
     useShoppingSession();
 
-  const itemIds = useMemo(() => {
-    if (!params.ids) return [];
-    return Array.isArray(params.ids) ? params.ids : params.ids.split(",");
-  }, [params.ids]);
+  const itemIds = useMemo(
+    () => (params.ids ? params.ids.split(",").filter(Boolean) : []),
+    [params.ids],
+  );
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [items, setItems] = useState<RestockItem[]>([]);
-  const [store, setStore] = useState(activeStore || "");
+  const [rows, setRows] = useState<Record<string, RowState>>({});
+  const [store, setStore] = useState(activeStore ?? "");
+  const [removed, setRemoved] = useState<{
+    item: RestockItem;
+    row: RowState;
+    index: number;
+  } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formState, setFormState] = useState<Record<string, ItemFormState>>({});
-
-  const total = useMemo(() => {
-    return items.reduce((sum, item) => {
-      const state = formState[item.id];
-      if (!state) return sum;
-      const qty = parseFloat(state.quantity) || 0;
-      const price = parseFloat(state.unitPrice) || 0;
-      return sum + qty * price;
-    }, 0);
-  }, [items, formState]);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchRestockItems() {
-      if (itemIds.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("items")
-        .select("id, name, low_stock_threshold, price, unit, quantity")
-        .in("id", itemIds);
-
-      if (error) {
-        Alert.alert("Error", "Failed to load items for restock");
-      } else if (data) {
-        setItems(data);
-
-        const initialForm: Record<string, ItemFormState> = {};
-        data.forEach((item) => {
-          initialForm[item.id] = {
-            quantity: String((item.low_stock_threshold ?? 0) + 1),
-            unitPrice: item.price !== null ? String(item.price) : "",
-          };
-        });
-
-        setFormState(initialForm);
-      }
-
+    if (itemIds.length === 0) {
       setLoading(false);
+      return;
     }
-    fetchRestockItems();
+    supabase
+      .from("items")
+      .select(
+        "id, name, quantity, price, unit, pack_size, pack_price, low_stock_threshold",
+      )
+      .in("id", itemIds)
+      .then(({ data, error }) => {
+        if (error || !data) {
+          setLoadError("Couldn't load these items. Go back and try again");
+        } else {
+          setItems(data);
+          const initial: Record<string, RowState> = {};
+          data.forEach((item) => {
+            initial[item.id] = {
+              packs: suggestedPacks(item),
+              packPrice: lastPackPrice(item),
+            };
+          });
+          setRows(initial);
+        }
+        setLoading(false);
+      });
   }, [itemIds]);
 
-  const handleItemChange = (
-    id: string,
-    field: keyof ItemFormState,
-    value: string,
-  ) => {
-    setFormState((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], [field]: value },
-    }));
-  };
+  const updateRow = (id: string, patch: Partial<RowState>) =>
+    setRows((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
 
-  const missingPrices = items.filter((item) => {
-    const price = parseFloat(formState[item.id]?.unitPrice ?? "");
-    return isNaN(price) || price < 0;
-  }).length;
-
-  const storeHint = !store.trim() ? "Enter the store you're shopping at" : null;
-
-  const priceHint =
-    missingPrices > 0
-      ? `Add a price for ${missingPrices} more item${missingPrices === 1 ? "" : "s"}`
-      : null;
-
-  const handleRemoveItem = (id: string) => {
+  const removeItem = (id: string) => {
+    const index = items.findIndex((i) => i.id === id);
+    if (index < 0) return;
+    setRemoved({ item: items[index], row: rows[id], index });
+    setItems((prev) => prev.filter((item) => item.id !== id));
     setCheckedLowStock((prev) => {
-      const newSet = new Set(prev);
-      newSet.delete(id);
-      return newSet;
-    });
-    setItems((prev) => prev.filter((prevItem) => prevItem.id !== id));
-    setFormState((prev) => {
-      const updated = { ...prev };
-      delete updated[id];
-      return updated;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
     });
   };
 
-  const isFormValid = useMemo(() => {
-    if (!store.trim()) return false;
-    if (items.length === 0) return false;
-
-    return items.every((item) => {
-      const state = formState[item.id];
-      if (!state) return false;
-
-      const priceNum = parseFloat(state.unitPrice);
-      const qtyNum = parseFloat(state.quantity);
-
-      return !isNaN(qtyNum) && qtyNum > 0 && priceNum >= 0 && !isNaN(priceNum);
+  const undoRemove = () => {
+    if (!removed) return;
+    const { item, row, index } = removed;
+    setItems((prev) => {
+      const next = [...prev];
+      next.splice(Math.min(index, next.length), 0, item);
+      return next;
     });
-  }, [store, items, formState]);
+    setRows((prev) => ({ ...prev, [item.id]: row }));
+    setCheckedLowStock((prev) => new Set(prev).add(item.id));
+    setRemoved(null);
+  };
 
-  const handleConfirmRestock = async () => {
-    if (!isFormValid) return;
+  const missingPrices = items.filter(
+    (item) => toPrice(rows[item.id]?.packPrice ?? "") === null,
+  ).length;
+
+  const total = items.reduce((sum, item) => {
+    const row = rows[item.id];
+    return sum + (row ? row.packs * (toPrice(row.packPrice) ?? 0) : 0);
+  }, 0);
+
+  const canSubmit =
+    store.trim() !== "" &&
+    items.length > 0 &&
+    missingPrices === 0 &&
+    !isSubmitting;
+
+  const hint =
+    items.length === 0
+      ? null
+      : !store.trim()
+        ? "Enter the shop you bought these from"
+        : missingPrices > 0
+          ? `And a price for ${missingPrices} more items${missingPrices === 1 ? "" : "s"}`
+          : null;
+
+  const handleConfirm = async () => {
+    if (!!canSubmit) return;
     setIsSubmitting(true);
+    setFormError(null);
 
     try {
-      const payload = items?.map((item) => {
-        const state = formState[item.id];
-        const unitPrice = parseFloat(state.unitPrice);
-        const quantity = parseFloat(state.quantity);
-
-        return {
-          item_id: item.id,
-          item_name: item.name,
-          quantity: quantity,
-          unit: item.unit,
-          unit_price: unitPrice,
-        };
-      });
+      const payload = items.map((item) => ({
+        item_id: item.id,
+        item_name: item.name,
+        unit: item.unit,
+        packs: rows[item.id].packs,
+        pack_size: item.pack_size || 1,
+        pack_price: toPrice(rows[item.id].packPrice),
+      }));
 
       const { error } = await supabase.rpc("restock_items", {
         p_store: store.trim(),
@@ -178,269 +187,259 @@ const ConfirmRestock = () => {
       if (error) throw error;
 
       // update activeStore constext if it changed durning restock
-      if (store !== activeStore) {
-        setActiveStore(store.trim());
-      }
-
+      if (store.trim() !== activeStore) setActiveStore(store.trim());
       // return to shopping list
       setCheckedLowStock(new Set());
-      router.back();
-    } catch (error) {
-      Alert.alert(
-        "Restock Failed",
-        error instanceof Error ? error.message : "Failed to complete restock",
+      router.back(); // shopping list refetches on focus
+    } catch {
+      setFormError(
+        "Couldn't save this restock. Check your connection and try again.",
       );
-    } finally {
       setIsSubmitting(false);
     }
   };
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size={Spacing.s12} color={Colors.primary} />
-      </View>
+      <Screen compact title="Confirm Restock">
+        <View style={styles.loading}>
+          <ActivityIndicator size={Spacing.s12} color={c.accent} />
+        </View>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView
-      edges={["top"]}
-      style={{ flex: 1, backgroundColor: c.surface }}
-    >
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <ScrollView
-          style={{ flex: 1 }}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.container}
-        >
-          <View style={styles.header}>
-            <IconButton
-              icon="back"
-              label="Back to Shopping list"
-              onPress={() => router.back()}
-            />
-            <Text variant="titleSm">Confirm restock</Text>
-          </View>
-
-          <View style={styles.fieldGroup}>
-            <TextField
-              icon="store"
-              value={store}
-              invalid={!store.trim()}
-              onChangeText={(val) => setStore(val)}
-              autoCapitalize="words"
-              placeholder="e.g. Aldi, Lidl"
-              accessibilityLabel="Store, required"
-            />
-            {activeStore ? (
-              <Text variant="caption" color={c.inkMuted}>
-                Filled in from your shopping session
+    <Screen
+      compact
+      title="Confirm Restock"
+      footer={
+        items.length > 0 || removed ? (
+          <>
+            {removed ? (
+              <View style={styles.undoBar}>
+                <Text variant="bodySm" color={c.onInverse} style={styles.flex}>
+                  {removed.item.name} removed
+                </Text>
+                <Button
+                  label="Undo"
+                  size="sm"
+                  variant="secondary"
+                  onPress={undoRemove}
+                />
+              </View>
+            ) : null}
+            {formError ? (
+              <Text variant="label" color={c.accentText} style={styles.center}>
+                {formError}
+              </Text>
+            ) : hint ? (
+              <Text variant="label" color={c.accentText} style={styles.center}>
+                {hint}
               </Text>
             ) : null}
+            <Button
+              label={isSubmitting ? "Confirming..." : "Confirm Restock"}
+              value={`£${total.toFixed(2)}`}
+              disabled={!canSubmit}
+              onPress={handleConfirm}
+            />
+          </>
+        ) : null
+      }
+    >
+      {loadError ? (
+        <Text variant="bodySm" color={c.accentText}>
+          {loadError}
+        </Text>
+      ) : null}
+
+      <Field
+        label="Shop"
+        required
+        icon="store"
+        value={store}
+        onChangeText={setStore}
+        placeholder="e.g. Aldi, Lidl"
+        autoCapitalize="words"
+        hint={
+          activeStore && store === activeStore
+            ? "Filled in from your shopping session"
+            : undefined
+        }
+      />
+
+      {items.length > 0 ? (
+        <View style={styles.section}>
+          <View style={styles.sectionHead}>
+            <Text variant="overline" color={c.inkMuted}>
+              {items.length} {items.length > 1 ? "item" : "items"}
+            </Text>
+            <Text variant="caption" color={c.inkMuted}>
+              Packs · price per pack
+            </Text>
           </View>
 
-          <View style={styles.sectionHeader}>
-            <Text variant="heading">{items.length} ITEMS</Text>
-            <Text>Qty · price each</Text>
-          </View>
-
-          <View style={styles.itemCardWrapper}>
-            {/* Items List */}
+          <View style={styles.card}>
             {items.map((item, index) => {
-              const state = formState[item.id] || {
-                quantity: "1",
-                unitPrice: "",
-              };
-              const qtyNum = parseFloat(state.quantity) || 0;
-              const priceNum = parseFloat(state.unitPrice) || 0;
+              const row = rows[item.id] ?? { packs: 1, packPrice: "" };
+              const size = item.pack_size || 1;
+              const isPack = size > 1;
+              const price = toPrice(row.packPrice);
+              const after = item.quantity + row.packs * size;
 
               return (
                 <View
                   key={item.id}
-                  style={[styles.itemCard, index > 0 && styles.itemDivider]}
+                  style={[styles.row, index > 0 && styles.divider]}
                 >
-                  <View style={styles.itemHeader}>
-                    <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                  <View style={styles.rowHead}>
+                    <View style={styles.flexText}>
                       <Text variant="item">{item.name}</Text>
+                      <Text variant="caption" color={c.inkMuted}>
+                        {isPack
+                          ? `Pack of ${size}${price != null ? ` · £${(price / size).toFixed(2)} per ${item.unit ?? "item"}` : ""}`
+                          : `Bought singly${price != null ? ` · £${price.toFixed(2)} each` : ""}`}
+                      </Text>
                       <Text variant="caption" color={c.inkMuted}>
                         In cupboard {item.quantity} →{" "}
                         <Text
                           variant="caption"
                           color={c.ok}
-                          style={{ fontFamily: Fonts.bodySemi }}
+                          style={styles.semi}
                         >
-                          {item.quantity + qtyNum}
+                          {after} {unitLabel(after, item.unit)}
                         </Text>
                       </Text>
                     </View>
-
                     <IconButton
                       icon="close"
                       variant="ghost"
-                      label={`Remove ${item.name}`}
-                      style={{ marginTop: -8, marginRight: -8 }}
-                      onPress={() => handleRemoveItem(item.id)}
+                      iconSize={20}
+                      label={`Remove ${item.name}, put back on the shelf`}
+                      onPress={() => removeItem(item.id)}
+                      style={styles.remove}
                     />
                   </View>
 
-                  <View style={styles.inputsRow}>
-                    <View style={{ flex: 1, minWidth: 0, gap: Spacing.s4 }}>
-                      <TextField
-                        size="sm"
-                        keyboardType="decimal-pad"
-                        value={state.quantity}
-                        onChangeText={(val) =>
-                          handleItemChange(item.id, "quantity", val)
-                        }
-                        accessibilityLabel={`Quantity of ${item.name}`}
-                      />
-                    </View>
-
-                    <View style={{ flex: 1, minWidth: 0, gap: Spacing.s4 }}>
-                      <TextField
-                        mono
-                        size="sm"
-                        prefix="£"
-                        keyboardType="decimal-pad"
-                        value={state.unitPrice}
-                        onChangeText={(val) =>
-                          handleItemChange(item.id, "unitPrice", val)
-                        }
-                        placeholder="0.00"
-                        accessibilityLabel={`Price paid for ${item.name}`}
-                        invalid={isNaN(parseFloat(state.unitPrice))}
-                      />
-                    </View>
+                  <View style={styles.controls}>
+                    <Stepper
+                      label={
+                        isPack
+                          ? `Packs of ${item.name}`
+                          : `How many ${item.name}`
+                      }
+                      value={row.packs}
+                      min={1}
+                      onChange={(packs) => updateRow(item.id, { packs })}
+                    />
+                    <TextField
+                      mono
+                      size="sm"
+                      prefix="£"
+                      keyboardType="decimal-pad"
+                      placeholder="0.00"
+                      value={row.packPrice}
+                      onChangeText={(packPrice) =>
+                        updateRow(item.id, { packPrice })
+                      }
+                      invalid={price === null}
+                      containerStyle={styles.flex}
+                      accessibilityLabel={`${isPack ? "Price per pack" : "Price each"} for ${item.name}`}
+                      trailing={
+                        <Text variant="caption" color={c.inkMuted}>
+                          {isPack ? "per pack" : "each"}
+                        </Text>
+                      }
+                    />
                   </View>
+                  {price === null ? (
+                    <Text
+                      variant="caption"
+                      color={c.accentText}
+                      style={styles.semi}
+                    >
+                      Price needed to restock
+                    </Text>
+                  ) : null}
                 </View>
               );
             })}
           </View>
-        </ScrollView>
-
-        <View
-          style={[
-            styles.footer,
-            { paddingBottom: insets.bottom + Spacing.s12 },
-          ]}
-        >
-          {priceHint && (
-            <Text
-              variant="label"
-              color={c.accentText}
-              style={{ textAlign: "center" }}
-            >
-              {priceHint}
-            </Text>
-          )}
+        </View>
+      ) : (
+        <View style={styles.empty}>
+          <Text variant="heading">Nothing left to restock</Text>
+          <Text variant="bodySm" color={c.inkMuted} style={styles.center}>
+            Everything went back on the shelf
+          </Text>
           <Button
-            onPress={handleConfirmRestock}
-            value={`£${total.toFixed(2)}`}
-            disabled={!isFormValid || isSubmitting}
-            label={isSubmitting ? "Confirming..." : "Confirm Restock"}
+            label="Back to shopping list"
+            size="sm"
+            variant="outline"
+            onPress={() => router.back()}
           />
         </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      )}
+    </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  container: {
-    paddingHorizontal: Spacing.s20,
-    paddingBottom: Spacing.s24,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.s8,
-    marginBottom: Spacing.s12,
-  },
-  title: {
-    fontSize: FontSize.xl,
-    fontWeight: "bold",
-    color: Colors.text.primary,
-  },
-  fieldGroup: {
-    gap: Spacing.s4,
-    marginTop: Spacing.s12,
-    marginBottom: Spacing.s12,
-  },
-  label: {
-    fontSize: FontSize.md,
-    fontWeight: "600",
-  },
-  inputLabel: {
-    fontSize: FontSize.sm,
-    color: Colors.text.primary,
-    marginBottom: Spacing.s4,
-  },
-  input: {
-    backgroundColor: c.surfaceRaised,
-    borderRadius: Radius.md,
-    padding: Spacing.s12,
-    fontSize: FontSize.md,
-    color: Colors.text.primary,
-    borderWidth: 1,
-    borderColor: c.line,
-  },
-  sectionHeader: {
+  flex: { flex: 1 },
+  center: { textAlign: "center" },
+  semi: { fontFamily: Fonts.bodySemi },
+  loading: { paddingVertical: Spacing.s48 },
+  section: { gap: Spacing.s8 },
+  sectionHead: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "baseline",
-    marginTop: Spacing.s16,
-    marginBottom: Spacing.s8,
   },
-  itemCardWrapper: {
+  card: {
+    backgroundColor: c.surfaceRaised,
     borderWidth: 1,
-    overflow: "hidden",
     borderColor: c.line,
     borderRadius: Radius.card,
-    backgroundColor: c.surfaceRaised,
+    overflow: "hidden",
   },
-  itemCard: {
+  row: {
+    paddingTop: Spacing.s8,
+    paddingBottom: Spacing.s12,
+    paddingLeft: 14,
+    paddingRight: 6,
     gap: Spacing.s8,
-    padding: Spacing.s16,
   },
-  itemDivider: {
-    borderTopWidth: 1,
-    borderTopColor: c.lineSoft,
-  },
-  itemHeader: {
+  divider: { borderTopWidth: 1, borderTopColor: c.lineSoft },
+  rowHead: { flexDirection: "row", alignItems: "flex-start", gap: Spacing.s8 },
+  flexText: { flex: 1, minWidth: 0, gap: 2, paddingTop: 4 },
+  remove: { marginTop: -2 },
+  controls: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    gap: 10,
+    paddingRight: Spacing.s8,
   },
-  itemName: { fontSize: FontSize.md, fontWeight: "600" },
-  subtotalText: { color: Colors.text.secondary },
-  removeButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.background,
-  },
-  removeButtonText: {
-    color: Colors.status.danger,
-    fontSize: FontSize.sm,
-    fontWeight: "600",
-  },
-  inputsRow: { flexDirection: "row", gap: 12 },
-  footer: {
+  undoBar: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: Spacing.s8,
-    borderTopWidth: 1,
-    borderTopColor: c.line,
-    paddingTop: Spacing.s20,
+    paddingLeft: 14,
+    paddingRight: 6,
+    paddingVertical: 6,
+    borderRadius: Radius.control,
+    backgroundColor: c.inverse,
+  },
+  empty: {
+    alignItems: "center",
+    gap: Spacing.s8,
+    paddingVertical: Spacing.s32,
     paddingHorizontal: Spacing.s20,
     backgroundColor: c.surfaceRaised,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: c.lineStrong,
+    borderRadius: Radius.card,
   },
 });
 

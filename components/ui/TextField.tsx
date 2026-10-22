@@ -20,11 +20,13 @@ type Props = TextInputProps & {
   size?: "sm" | "md";
   mono?: boolean;
   containerStyle?: StyleProp<ViewStyle>;
+  trailing?: React.ReactNode;
 };
 
 export const TextField = ({
   icon,
   prefix,
+  trailing,
   invalid,
   size = "md",
   mono,
@@ -61,6 +63,7 @@ export const TextField = ({
         }}
         style={[styles.input, mono && styles.mono, style]}
       />
+      {trailing ?? null}
     </View>
   );
 };
