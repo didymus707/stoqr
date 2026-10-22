@@ -1,8 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useFocusEffect } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { Item } from "@/types/database";
 import { useAuth } from "@/stores/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export type ManualItem = {
   id: string;
@@ -26,6 +27,25 @@ export function useShoppingList(): UseShoppingListReturn {
   const [manualItems, setManualItems] = useState<ManualItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [manualLoaded, setManualLoaded] = useState(false);
+
+  const storageKey = session?.user
+    ? `shoppingList.manual.${session.user.id}`
+    : null;
+
+  useEffect(() => {
+    if (!storageKey) return;
+    AsyncStorage.getItem(storageKey)
+      .then((raw) => {
+        if (raw) setManualItems(JSON.parse(raw));
+      })
+      .finally(() => setManualLoaded(true));
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (storageKey && manualLoaded)
+      AsyncStorage.setItem(storageKey, JSON.stringify(manualItems));
+  }, [storageKey, manualLoaded, manualItems]);
 
   const fetchLowStockItems = useCallback(async () => {
     if (!session?.user) return;
