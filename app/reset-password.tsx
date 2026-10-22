@@ -12,6 +12,7 @@ import { Screen } from "@/components/ui/Screen";
 import { Text } from "@/components/ui/Text";
 import { Colors, Radius, Spacing } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/stores/auth";
 
 const c = Colors.light;
 
@@ -25,18 +26,22 @@ export default function ResetPasswordScreen() {
   const [confirm, setConfirm] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { setRecoveringPassword } = useAuth();
 
   useEffect(() => {
     if (!code) {
       setStatus("expired");
       return;
     }
+    setRecoveringPassword(true);
     supabase.auth
       .exchangeCodeForSession(code)
       .then(({ error: exchangeError }) => {
         setStatus(exchangeError ? "expired" : "ready");
       });
   }, [code]);
+
+  useEffect(() => () => setRecoveringPassword(false), []);
 
   const mismatch = confirm.length > 0 && confirm !== password;
   const canSave = passwordIsStrong(password) && confirm === password && !saving;
@@ -48,7 +53,10 @@ export default function ResetPasswordScreen() {
     const { error: updateError } = await supabase.auth.updateUser({ password });
     setSaving(false);
     if (updateError) setError("Couldn't save your new password. Try again.");
-    else router.replace("/(tabs)");
+    else {
+      setRecoveringPassword(false);
+      router.replace("/(tabs)");
+    }
   };
 
   if (status === "checking") {

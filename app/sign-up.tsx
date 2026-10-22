@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/PasswordField";
 import { Screen } from "@/components/ui/Screen";
 import { Text } from "@/components/ui/Text";
-import { Colors, Fonts, Radius, Spacing } from "@/constants/theme";
+import { Colors, Fonts, Spacing } from "@/constants/theme";
 import { PRIVACY_POLICY_URL, TERMS_URL } from "@/lib/links";
 import { supabase } from "@/lib/supabase";
 

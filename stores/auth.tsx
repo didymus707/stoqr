@@ -13,6 +13,8 @@ type AuthContextType = {
   session: Session | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  isRecoveringPassword: boolean;
+  setRecoveringPassword: (value: boolean) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,6 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isRecoveringPassword, setRecoveringPassword] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -34,9 +37,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (_event === "SIGNED_IN") {
-        requestNotificationPermissions();
-      }
+      if (_event === "PASSWORD_RECOVERY") setRecoveringPassword(true);
+      if (_event === "SIGNED_IN") requestNotificationPermissions();
     });
 
     return () => subscription.unsubscribe();
@@ -54,7 +56,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ session, loading, signOut }}>
+    <AuthContext.Provider
+      value={{
+        session,
+        loading,
+        signOut,
+        isRecoveringPassword,
+        setRecoveringPassword,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

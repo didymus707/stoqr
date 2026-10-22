@@ -13,13 +13,13 @@ const c = Colors.light;
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const { session, loading } = useAuth();
+  const { session, loading, isRecoveringPassword } = useAuth();
 
   useEffect(() => {
-    if (!loading && session) {
+    if (!loading && session && !isRecoveringPassword) {
       router.replace("/(tabs)");
     }
-  }, [session, loading, router]);
+  }, [session, loading, router, isRecoveringPassword]);
 
   if (loading) {
     return (
