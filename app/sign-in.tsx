@@ -23,15 +23,15 @@ const friendlyError = (message: string) => {
 
 export default function SignInScreen() {
   const router = useRouter();
-  const { session } = useAuth();
+  const { session, isRecoveringPassword } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (session) router.replace("/(tabs)");
-  }, [session]);
+    if (session && !isRecoveringPassword) router.replace("/(tabs)");
+  }, [session, isRecoveringPassword]);
 
   const canSubmit = email.trim() !== "" && password !== "" && !loading;
 
