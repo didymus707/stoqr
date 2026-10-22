@@ -1,8 +1,4 @@
-import {
-  View,
-  StyleSheet,
-  ActivityIndicator,
-} from "react-native";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
 import { useEffect } from "react";
 import { useAuth } from "@/stores/auth";
 import { useRouter } from "expo-router";
@@ -53,7 +49,7 @@ export default function WelcomeScreen() {
       </View>
 
       <View style={styles.actions}>
-        <Button label="Get Started" onPress={() => router.push("/sign-up")} />
+        <Button label="Get started" onPress={() => router.push("/sign-up")} />
         <Button
           label="I already have an account"
           variant="ghost"

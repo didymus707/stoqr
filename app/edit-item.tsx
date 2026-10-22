@@ -75,7 +75,7 @@ const EditItemScreen = () => {
 
   if (!values) {
     return (
-      <Screen compact title="Edit Item">
+      <Screen compact title="Edit item">
         {loadError ? (
           <Text variant="bodySm" color={c.accentText}>
             {loadError}
