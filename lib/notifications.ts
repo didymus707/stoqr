@@ -1,6 +1,7 @@
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
+import { unitLabel } from "./unit";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -46,8 +47,8 @@ export const sendLowStockNotification = async (
 ) => {
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: "📦 Running Low",
-      body: `${itemName} is running low — only ${quantity} ${unit} left`,
+      title: `${itemName} is running low`,
+      body: `${quantity} ${unitLabel(quantity, unit)} left. Added to your shopping list.`,
       data: { type: "low_stock" },
     },
     trigger: null,
@@ -57,8 +58,8 @@ export const sendLowStockNotification = async (
 export const sendOutOfStockNotification = async (itemName: string) => {
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: "Out of Stock ⚠️",
-      body: `You've run out of ${itemName}. Add it to your shopping list!`,
+      title: `${itemName} is out`,
+      body: "Added to your shopping list.",
       data: { type: "out_of_stock" },
     },
     trigger: null,
