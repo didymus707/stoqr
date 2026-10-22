@@ -1,223 +1,153 @@
-import { Radius, Colors, FontSize, Spacing } from "@/constants/theme";
-import { supabase } from "@/lib/supabase";
-import { passwordRegex, passwordRequirementMessage } from "@/lib/utils";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Button } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+  PasswordChecks,
+  PasswordField,
+  passwordIsStrong,
+} from "@/components/ui/PasswordField";
+import { Screen } from "@/components/ui/Screen";
+import { Text } from "@/components/ui/Text";
+import { Colors, Radius, Spacing } from "@/constants/theme";
+import { supabase } from "@/lib/supabase";
 
-type ExchangeStatus = "exchanging" | "ready" | "error";
+const c = Colors.light;
 
-export default function ResetPassword() {
+type Status = "checking" | "ready" | "expired";
+
+export default function ResetPasswordScreen() {
   const router = useRouter();
   const { code } = useLocalSearchParams<{ code?: string }>();
-  const [status, setStatus] = useState<ExchangeStatus>("exchanging");
-  const [exchangeError, setExchangeError] = useState<string | null>(null);
-  const [password, setPassword] = useState<string>("");
-  const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const [formError, setFormError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [status, setStatus] = useState<Status>("checking");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const exchange = async () => {
-      if (!code) {
-        setStatus("error");
-        setExchangeError("This reset link is missing or malformed!");
-        return;
-      }
-
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
-      if (error) {
-        setStatus("error");
-        setExchangeError("This link has expired or already been used");
-        return;
-      }
-
-      setStatus("ready");
-    };
-
-    exchange();
+    if (!code) {
+      setStatus("expired");
+      return;
+    }
+    supabase.auth
+      .exchangeCodeForSession(code)
+      .then(({ error: exchangeError }) => {
+        setStatus(exchangeError ? "expired" : "ready");
+      });
   }, [code]);
 
-  const handleSubmit = async () => {
-    if (!password) {
-      setFormError("Password is required");
-      return;
-    }
+  const mismatch = confirm.length > 0 && confirm !== password;
+  const canSave = passwordIsStrong(password) && confirm === password && !saving;
 
-    if (!passwordRegex.test(password)) {
-      setFormError(passwordRequirementMessage);
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setFormError("Passwords do not match");
-      return;
-    }
-
-    setSubmitting(true);
-    setFormError(null);
-
-    const { error } = await supabase.auth.updateUser({ password });
-    setSubmitting(false);
-
-    if (error) {
-      setFormError(error.message);
-      return;
-    }
-
-    router.replace("/(tabs)");
+  const save = async () => {
+    if (!canSave) return;
+    setSaving(true);
+    setError(null);
+    const { error: updateError } = await supabase.auth.updateUser({ password });
+    setSaving(false);
+    if (updateError) setError("Couldn't save your new password. Try again.");
+    else router.replace("/(tabs)");
   };
 
-  if (status === "exchanging") {
+  if (status === "checking") {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: Colors.background,
-        }}
-      >
-        <ActivityIndicator color={Colors.primary} />
-      </View>
+      <Screen showBack={false} title="Checking your link…">
+        <View style={styles.loading}>
+          <ActivityIndicator color={c.accent} />
+        </View>
+      </Screen>
     );
   }
 
-  if (status === "error") {
+  if (status === "expired") {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: Colors.background,
-          padding: Spacing.s24,
-        }}
+      <Screen
+        showBack={false}
+        title="This link has expired"
+        footer={
+          <>
+            <Button
+              label="Send a new link"
+              onPress={() => router.replace("/forgot-password")}
+            />
+            <Button
+              label="Back to sign in"
+              variant="ghost"
+              onPress={() => router.replace("/sign-in")}
+            />
+          </>
+        }
       >
-        <Text
-          style={{
-            fontSize: FontSize.md,
-            color: Colors.status.danger,
-            textAlign: "center",
-            marginBottom: Spacing.s24,
-          }}
-        >
-          {exchangeError}
+        <View style={styles.tile}>
+          <Icon name="clock" size={30} color={c.accentText} />
+        </View>
+        <Text variant="body" color={c.inkMuted}>
+          Reset links only work once, for a short time. Ask for a new one and
+          use it straight away.
         </Text>
-        <TouchableOpacity
-          onPress={() => router.replace("/forgot-password")}
-          style={{
-            backgroundColor: Colors.primary,
-            borderRadius: Radius.md,
-            paddingVertical: Spacing.s12,
-            paddingHorizontal: Spacing.s24,
-          }}
-        >
-          <Text
-            style={{ color: "#fff", fontSize: FontSize.md, fontWeight: "600" }}
-          >
-            Request a new link
-          </Text>
-        </TouchableOpacity>
-      </View>
+      </Screen>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={{
-        flex: 1,
-        backgroundColor: Colors.background,
-        padding: Spacing.s24,
-        justifyContent: "center",
-      }}
+    <Screen
+      showBack={false}
+      title="Choose a new password"
+      subtitle="You'll use it next time you sign in."
+      footer={
+        <>
+          {error ? (
+            <Text variant="label" color={c.accentText} style={styles.center}>
+              {error}
+            </Text>
+          ) : null}
+          <Button
+            label={saving ? "Saving…" : "Save new password"}
+            disabled={!canSave}
+            onPress={save}
+          />
+        </>
+      }
     >
-      <Text
-        style={{
-          fontSize: FontSize.xl,
-          fontWeight: "600",
-          color: Colors.text.primary,
-          marginBottom: Spacing.s8,
-        }}
-      >
-        Set a new password
-      </Text>
-      <Text
-        style={{
-          fontSize: FontSize.md,
-          color: Colors.text.secondary,
-          marginBottom: Spacing.s24,
-        }}
-      >
-        Choose a new password for your account.
-      </Text>
-
-      <TextInput
-        placeholder="New password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-        autoCapitalize="none"
-        style={inputStyle}
-      />
-      <TextInput
-        placeholder="Confirm password"
-        secureTextEntry
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        autoCapitalize="none"
-        style={[inputStyle, { marginTop: Spacing.s8 }]}
-      />
-
-      {formError && (
-        <Text
-          style={{
-            color: Colors.status.danger,
-            marginTop: Spacing.s8,
-            fontSize: FontSize.sm,
-          }}
-        >
-          {formError}
-        </Text>
-      )}
-
-      <TouchableOpacity
-        onPress={handleSubmit}
-        disabled={submitting}
-        style={{
-          backgroundColor: Colors.primary,
-          borderRadius: Radius.md,
-          paddingVertical: Spacing.s12,
-          alignItems: "center",
-          marginTop: Spacing.s24,
-          opacity: submitting ? 0.6 : 1,
-        }}
-      >
-        <Text
-          style={{ color: "#fff", fontSize: FontSize.md, fontWeight: "600" }}
-        >
-          {submitting ? "Updating..." : "Update password"}
-        </Text>
-      </TouchableOpacity>
-    </KeyboardAvoidingView>
+      <View style={styles.fields}>
+        <View style={styles.passwordBlock}>
+          <PasswordField
+            label="New password"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Choose a password"
+            autoComplete="new-password"
+            textContentType="newPassword"
+          />
+          <PasswordChecks password={password} />
+        </View>
+        <PasswordField
+          label="Confirm new password"
+          value={confirm}
+          onChangeText={setConfirm}
+          placeholder="Type it again"
+          autoComplete="new-password"
+          textContentType="newPassword"
+          error={mismatch ? "Passwords don't match" : null}
+        />
+      </View>
+    </Screen>
   );
 }
 
-const inputStyle = {
-  borderWidth: 1,
-  borderColor: Colors.border,
-  borderRadius: Radius.md,
-  padding: Spacing.s12,
-  fontSize: FontSize.md,
-  color: Colors.text.primary,
-  backgroundColor: Colors.surface,
-};
+const styles = StyleSheet.create({
+  loading: { paddingVertical: Spacing.s48 },
+  fields: { gap: Spacing.s16 },
+  passwordBlock: { gap: Spacing.s8 },
+  center: { textAlign: "center" },
+  tile: {
+    width: 64,
+    height: 64,
+    borderRadius: Radius.card,
+    backgroundColor: c.accentSoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

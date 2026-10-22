@@ -41,7 +41,7 @@ export default function SetupCupboard() {
 
     try {
       const inventoryId = await getOrCreateInventory(session.user.id);
-      const { error: insertError } = await supabase.from("inventory").insert(
+      const { error: insertError } = await supabase.from("items").insert(
         chosen.map((item) => ({
           inventory_id: inventoryId,
           name: item.name,

@@ -1,218 +1,117 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
+import * as Linking from "expo-linking";
+import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { Icon } from "@/components/ui/Icon";
+import { Screen } from "@/components/ui/Screen";
+import { Text } from "@/components/ui/Text";
+import { Colors, Radius } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
-import { canGoBack } from "expo-router/build/global-state/routing";
-import { Colors, FontSize, Spacing, Radius } from "@/constants/theme";
 
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const c = Colors.light;
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
-  const canUserGoBack = canGoBack();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
 
-  async function handleReset() {
-    if (!email.trim()) {
-      setError("Please enter your email address");
-      return;
-    }
+  const valid = EMAIL.test(email.trim());
 
-    if (!emailRegex.test(email.trim())) {
-      setError("Please enter a valid email address");
-      return;
-    }
-
+  const sendLink = async () => {
+    if (!valid || loading) return;
     setLoading(true);
-    setError("");
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: "s://reset-password",
-    });
-
+    setError(null);
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+      email.trim(),
+      {
+        redirectTo: Linking.createURL("/reset-password"),
+      },
+    );
     setLoading(false);
-
-    if (error) {
-      setError(error.message);
-      return;
-    }
-
-    setSent(true);
-  }
+    if (resetError)
+      setError("Couldn't send the link. Check your connection and try again.");
+    else setSent(true);
+  };
 
   if (sent) {
     return (
-      <View style={styles.container}>
-        <View style={styles.sentContainer}>
-          <Text style={styles.sentEmoji}>📧</Text>
-          <Text style={styles.sentTitle}>Check your email</Text>
-          <Text style={styles.sentSubtitle}>
-            We've sent a password reset link to{"\n"}
-            <Text style={styles.sentEmail}>{email}</Text>
-          </Text>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => router.replace("/sign-in")}
-          >
-            <Text style={styles.buttonText}>Back to sign in</Text>
-          </TouchableOpacity>
+      <Screen
+        showBack={false}
+        title="Check your email"
+        footer={
+          <>
+            <Button
+              label="Back to sign in"
+              onPress={() => router.replace("/sign-in")}
+            />
+            <Button
+              label={loading ? "Sending…" : "Send it again"}
+              variant="ghost"
+              disabled={loading}
+              onPress={sendLink}
+            />
+          </>
+        }
+      >
+        <View style={styles.tile}>
+          <Icon name="mail" size={30} color={c.ok} />
         </View>
-      </View>
+        <Text variant="body" color={c.inkMuted}>
+          We've sent a link to <Text variant="body">{email.trim()}</Text>. Open
+          it on this phone to choose a new password.
+        </Text>
+        <Text variant="bodySm" color={c.inkMuted}>
+          Nothing there? Check your spam folder, or send it again.
+        </Text>
+      </Screen>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() =>
-          canUserGoBack ? router.back() : router.replace("/sign-in")
-        }
-      >
-        <Text style={styles.backText}>← Back</Text>
-      </TouchableOpacity>
-
-      <View style={styles.header}>
-        <Text style={styles.title}>Reset password</Text>
-        <Text style={styles.subtitle}>
-          Enter your email and we'll send you a reset link
-        </Text>
-      </View>
-
-      <View style={styles.form}>
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="you@example.com"
-            placeholderTextColor={Colors.text.muted}
-            value={email}
-            onChangeText={(text) => {
-              setEmail(text);
-              setError("");
-            }}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            autoFocus
-          />
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        </View>
-
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleReset}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <Text style={styles.buttonText}>Send reset link</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </View>
+    <Screen
+      title="Forgot your password?"
+      subtitle="Enter the email you signed up with and we'll send you a link to choose a new one."
+      footer={
+        <Button
+          label={loading ? "Sending…" : "Send reset link"}
+          disabled={!valid || loading}
+          onPress={sendLink}
+        />
+      }
+    >
+      <Field
+        label="Email"
+        value={email}
+        onChangeText={(t) => {
+          setEmail(t);
+          setError(null);
+        }}
+        placeholder="you@example.com"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete="email"
+        textContentType="emailAddress"
+        returnKeyType="send"
+        onSubmitEditing={sendLink}
+        error={error}
+      />
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    paddingHorizontal: Spacing.s24,
-    paddingTop: Spacing.s48,
-  },
-  backButton: {
-    marginBottom: Spacing.s24,
-  },
-  backText: {
-    fontSize: FontSize.md,
-    color: Colors.primary,
-  },
-  header: {
-    marginBottom: Spacing.s32,
-  },
-  title: {
-    fontSize: FontSize.xxl,
-    fontWeight: "700",
-    color: Colors.text.primary,
-    marginBottom: Spacing.s4,
-  },
-  subtitle: {
-    fontSize: FontSize.md,
-    color: Colors.text.secondary,
-  },
-  form: {
-    gap: Spacing.s12,
-  },
-  inputGroup: {
-    gap: Spacing.s4,
-  },
-  label: {
-    fontSize: FontSize.sm,
-    fontWeight: "500",
-    color: Colors.text.primary,
-  },
-  input: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
-    padding: Spacing.s12,
-    fontSize: FontSize.md,
-    color: Colors.text.primary,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  button: {
-    backgroundColor: Colors.primary,
-    padding: Spacing.s12,
-    borderRadius: Radius.pill,
-    alignItems: "center",
-    marginTop: Spacing.s8,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: FontSize.md,
-    fontWeight: "600",
-  },
-  errorText: {
-    fontSize: FontSize.xs,
-    color: Colors.status.danger,
-  },
-  sentContainer: {
-    flex: 1,
+  tile: {
+    width: 64,
+    height: 64,
+    borderRadius: Radius.card,
+    backgroundColor: c.okSoft,
     alignItems: "center",
     justifyContent: "center",
-    gap: Spacing.s12,
-  },
-  sentEmoji: {
-    fontSize: 48,
-  },
-  sentTitle: {
-    fontSize: FontSize.xl,
-    fontWeight: "700",
-    color: Colors.text.primary,
-  },
-  sentSubtitle: {
-    fontSize: FontSize.md,
-    color: Colors.text.secondary,
-    textAlign: "center",
-    lineHeight: 24,
-  },
-  sentEmail: {
-    color: Colors.primary,
-    fontWeight: "600",
   },
 });
