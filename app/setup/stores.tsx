@@ -4,11 +4,12 @@ import { Icon } from "@/components/ui/Icon";
 import { Text } from "@/components/ui/Text";
 import { TextField } from "@/components/ui/TextField";
 import { Colors, Radius, Spacing } from "@/constants/theme";
+import { setConsent } from "@/lib/consents";
 import { updateProfile } from "@/lib/setup";
 import { useAuth } from "@/stores/auth";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, Switch, View } from "react-native";
 
 const c = Colors.light;
 
@@ -31,6 +32,7 @@ export default function SetupStores() {
   const [addingOtherStores, setAddingOtherStores] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sharePrice, setSharePrice] = useState(false);
 
   const goNext = () => router.push("/setup/cupboard");
 
@@ -57,6 +59,7 @@ export default function SetupStores() {
     setError(null);
     try {
       await updateProfile(session.user.id, { preferred_stores: pickedStores });
+      await setConsent(session.user.id, "price_sharing", sharePrice, "setup");
       goNext();
     } catch {
       setError(
@@ -157,6 +160,39 @@ export default function SetupStores() {
             />
           </View>
         ) : null}
+
+        <View style={styles.consent}>
+          <View style={styles.consentText}>
+            <Text variant="item">Find out where things are cheapest</Text>
+            <Text variant="bodySm" color={c.inkMuted}>
+              Share the prices you pay and stoQr can show which shops are
+              cheapest for the things you buy, using prices from shoppers like
+              you.
+            </Text>
+            <Text variant="bodySm" color={c.inkMuted}>
+              Prices only appear as averages, once 5 or more people have shared
+              one. Your name is never shown
+            </Text>
+          </View>
+
+          <View style={styles.consentToggle}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text variant="label">Share my prices</Text>
+              <Text variant="caption" color={c.inkMuted}>
+                Off unless you turn it on. You can change this in Profile.
+              </Text>
+            </View>
+
+            <Switch
+              value={sharePrice}
+              onValueChange={setSharePrice}
+              trackColor={{ false: c.lineStrong, true: c.inverse }}
+              thumbColor={c.surfaceRaised}
+              accessibilityLabel="Share my prices"
+              accessibilityHint="Adds the prices you pay to anonymous averages other shoppers see"
+            />
+          </View>
+        </View>
       </View>
     </SetupLayout>
   );
@@ -197,4 +233,21 @@ const styles = StyleSheet.create({
   otherRow: { flexDirection: "row", alignItems: "center", gap: Spacing.s8 },
   flex: { flex: 1 },
   center: { textAlign: "center" },
+  consent: {
+    gap: Spacing.s12,
+    padding: Spacing.s16,
+    backgroundColor: c.surfaceRaised,
+    borderWidth: 1,
+    borderColor: c.line,
+    borderRadius: Radius.card,
+  },
+  consentText: { gap: 4 },
+  consentToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.s12,
+    paddingTop: Spacing.s12,
+    borderTopWidth: 1,
+    borderTopColor: c.lineSoft,
+  },
 });
