@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { Linking, Modal, Pressable, StyleSheet, View } from "react-native";
+import {
+  Linking,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Switch,
+  View,
+} from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Notifications from "expo-notifications";
@@ -16,6 +23,7 @@ import { requestNotificationPermissions } from "@/lib/notifications";
 import { formatPostcode, POSTCODE_REGEX, updateProfile } from "@/lib/setup";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/stores/auth";
+import { getConsent, setConsent } from "@/lib/consents";
 
 const c = Colors.light;
 
@@ -34,8 +42,18 @@ export default function ProfileScreen() {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [sharing, setSharing] = useState<boolean | null>(false);
 
   const email = session?.user?.email ?? "";
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!session) return;
+      getConsent(session.user.id, "price_sharing")
+        .then(setSharing)
+        .catch(() => setSharing(false));
+    }, [session]),
+  );
 
   // Fill the form once the profile loads.
   useEffect(() => {
@@ -68,6 +86,20 @@ export default function ProfileScreen() {
       .join("") ||
     email.charAt(0).toUpperCase() ||
     "?";
+
+  const toggleSharing = async (next: boolean) => {
+    if (!session) return;
+    const previous = sharing;
+    setSharing(next);
+    try {
+      await setConsent(session.user.id, "price_sharing", next, "profile");
+    } catch {
+      setSharing(previous);
+      setError(
+        "Couldn't update price sharing. Check your connection and try again.",
+      );
+    }
+  };
 
   const save = async () => {
     if (!session || !changed || !postcodeOk || saving) return;
@@ -219,6 +251,24 @@ export default function ProfileScreen() {
                   <View style={styles.knob} />
                 </View>
               }
+            />
+          </View>
+
+          <View style={[styles.row, styles.divider]}>
+            <Icon name="budget" size={22} />
+            <View style={styles.flex}>
+              <Text variant="item">Share my prices</Text>
+              <Text variant="caption" color={c.inkMuted}>
+                Anonymous averages, shown once 5 or more people share a price
+              </Text>
+            </View>
+            <Switch
+              value={!!sharing}
+              disabled={sharing === null}
+              onValueChange={toggleSharing}
+              trackColor={{ false: c.lineStrong, true: c.inverse }}
+              thumbColor={c.surfaceRaised}
+              accessibilityLabel="Share my prices"
             />
           </View>
         </Section>
