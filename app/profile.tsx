@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import { Linking, Modal, Pressable, StyleSheet, View } from "react-native";
+import {
+  AppState,
+  Linking,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Switch,
+  View,
+} from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Notifications from "expo-notifications";
@@ -16,6 +24,8 @@ import { requestNotificationPermissions } from "@/lib/notifications";
 import { formatPostcode, POSTCODE_REGEX, updateProfile } from "@/lib/setup";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/stores/auth";
+import { getConsent, setConsent } from "@/lib/consents";
+import { Toggle } from "@/components/ui/Toggle";
 
 const c = Colors.light;
 
@@ -34,8 +44,21 @@ export default function ProfileScreen() {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [sharing, setSharing] = useState<boolean | null>(null);
 
   const email = session?.user?.email ?? "";
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!session) return;
+      getConsent(session.user.id, "price_sharing")
+        .then(setSharing)
+        .catch((e) => {
+          console.warn(e);
+          setSharing(false);
+        });
+    }, [session]),
+  );
 
   // Fill the form once the profile loads.
   useEffect(() => {
@@ -47,9 +70,15 @@ export default function ProfileScreen() {
   // The phone's real notification setting, re-checked when you come back from Settings.
   useFocusEffect(
     useCallback(() => {
-      Notifications.getPermissionsAsync().then(({ status }) =>
-        setAlertsOn(status === "granted"),
-      );
+      const check = () =>
+        Notifications.getPermissionsAsync().then(({ status }) =>
+          setAlertsOn(status === "granted"),
+        );
+      check();
+      const sub = AppState.addEventListener("change", (state) => {
+        if (state === "active") check();
+      });
+      return () => sub.remove();
     }, []),
   );
 
@@ -68,6 +97,20 @@ export default function ProfileScreen() {
       .join("") ||
     email.charAt(0).toUpperCase() ||
     "?";
+
+  const toggleSharing = async (next: boolean) => {
+    if (!session) return;
+    const previous = sharing;
+    setSharing(next);
+    try {
+      await setConsent(session.user.id, "price_sharing", next, "profile");
+    } catch {
+      setSharing(previous);
+      setError(
+        "Couldn't update price sharing. Check your connection and try again.",
+      );
+    }
+  };
 
   const save = async () => {
     if (!session || !changed || !postcodeOk || saving) return;
@@ -211,13 +254,28 @@ export default function ProfileScreen() {
                   ? "Checking…"
                   : alertsOn
                     ? "On. Change this in your phone's Settings."
-                    : "Off. Tap to turn on."
+                    : "Off. Turn on to hear when things run low."
               }
-              onPress={handleAlerts}
               trailing={
-                <View style={[styles.track, alertsOn && styles.trackOn]}>
-                  <View style={styles.knob} />
-                </View>
+                <Toggle
+                  value={!!alertsOn}
+                  disabled={alertsOn === null}
+                  onValueChange={handleAlerts}
+                  accessibilityLabel="Low-stock alerts"
+                />
+              }
+            />
+            <Row
+              icon="budget"
+              title="Share my prices"
+              detail="Helps show which shops are cheapest. Averages only, never your name or location."
+              trailing={
+                <Toggle
+                  value={!!sharing}
+                  disabled={sharing === null}
+                  onValueChange={toggleSharing}
+                  accessibilityLabel="Share my prices"
+                />
               }
             />
           </View>
