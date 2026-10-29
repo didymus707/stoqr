@@ -21,7 +21,7 @@ import { Colors, Radius, Spacing } from "@/constants/theme";
 import { useProfile } from "@/hooks/useProfile";
 import { PRIVACY_POLICY_URL } from "@/lib/links";
 import { requestNotificationPermissions } from "@/lib/notifications";
-import { formatPostcode, POSTCODE_REGEX, updateProfile } from "@/lib/setup";
+import { POSTCODE_OR_DISTRICT_REGEX, POSTCODE_REGEX, postcodeDistrict, updateProfile } from "@/lib/setup";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/stores/auth";
 import { getConsent, setConsent } from "@/lib/consents";
@@ -86,7 +86,7 @@ export default function ProfileScreen() {
     name.trim() !== (profile?.full_name ?? "").trim() ||
     postcode.trim().toUpperCase() !== (profile?.postcode ?? "").toUpperCase();
   const postcodeOk =
-    postcode.trim() === "" || POSTCODE_REGEX.test(postcode.trim());
+    postcode.trim() === "" || POSTCODE_OR_DISTRICT_REGEX.test(postcode.trim());
 
   const initials =
     name
@@ -119,7 +119,7 @@ export default function ProfileScreen() {
     try {
       await updateProfile(session.user.id, {
         full_name: name.trim(),
-        postcode: postcode.trim() ? formatPostcode(postcode.trim()) : null,
+        postcode: postcode.trim() ? postcodeDistrict(postcode.trim()) : null,
       });
       await refetch();
       setSaved(true);
@@ -237,8 +237,8 @@ export default function ProfileScreen() {
               autoCapitalize="characters"
               autoCorrect={false}
               autoComplete="postal-code"
-              hint="Used to show prices from shoppers near you."
-              error={postcodeOk ? null : "Enter a UK postcode, like SW16 1AA"}
+              hint="We only keep the first half, like SW16."
+              error={postcodeOk ? null : "Enter a postcode, like SW16 1AA"}
             />
           </View>
         </Section>

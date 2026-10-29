@@ -5,7 +5,6 @@ import { Text } from "@/components/ui/Text";
 import { TextField } from "@/components/ui/TextField";
 import { Colors, Radius, Spacing } from "@/constants/theme";
 import {
-  formatPostcode,
   POSTCODE_REGEX,
   postcodeDistrict,
   updateProfile,
@@ -36,7 +35,7 @@ export default function SetupPostcode() {
     setError(null);
     try {
       await updateProfile(session.user.id, {
-        postcode: formatPostcode(trimmed),
+        postcode: postcodeDistrict(trimmed),
       });
       goNext();
     } catch {
@@ -94,8 +93,9 @@ export default function SetupPostcode() {
       <View style={styles.note}>
         <Icon name="lock" size={20} color={c.inkMuted} />
         <Text variant="bodySm" color={c.inkMuted} style={styles.noteText}>
-          Only the first half{valid ? `,${postcodeDistrict(trimmed)},` : ""} is
-          used for prices. Other shoppers never see your address
+          We only keep the first half
+          {valid ? `, ${postcodeDistrict(trimmed)},` : ""} to show prices near
+          you. We never store your full address.
         </Text>
       </View>
     </SetupLayout>

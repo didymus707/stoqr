@@ -2,13 +2,15 @@ import { supabase } from "./supabase";
 
 export const POSTCODE_REGEX = /^[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}$/i;
 
-export const formatPostcode = (value: string) => {
-  const s = value.replace(/\s+/g, "").toUpperCase();
-  return s.length > 3 ? `${s.slice(0, -3)} ${s.slice(-3)}` : s;
-};
+// Accepts a full postcode or just the first half.
+export const POSTCODE_OR_DISTRICT_REGEX =
+  /^[A-Z]{1,2}[0-9][0-9A-Z]?(\s?[0-9][A-Z]{2})?$/i;
 
-export const postcodeDistrict = (value: string) =>
-  formatPostcode(value).split(" ")[0];
+// "SW16 1AA" -> "SW16", "sw161aa" -> "SW16", "SW16" -> "SW16"
+export const postcodeDistrict = (value: string) => {
+  const postcode = value.replace(/\s+/g, "").toUpperCase();
+  return postcode.length >= 5 && /[0-9][A-Z]{2}$/.test(postcode) ? postcode.slice(0, -3) : postcode;
+};
 
 export const updateProfile = async (
   userId: string,
