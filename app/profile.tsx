@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  AppState,
   Linking,
   Modal,
   Pressable,
@@ -24,6 +25,7 @@ import { formatPostcode, POSTCODE_REGEX, updateProfile } from "@/lib/setup";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/stores/auth";
 import { getConsent, setConsent } from "@/lib/consents";
+import { Toggle } from "@/components/ui/Toggle";
 
 const c = Colors.light;
 
@@ -42,7 +44,7 @@ export default function ProfileScreen() {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [sharing, setSharing] = useState<boolean | null>(false);
+  const [sharing, setSharing] = useState<boolean | null>(null);
 
   const email = session?.user?.email ?? "";
 
@@ -51,7 +53,10 @@ export default function ProfileScreen() {
       if (!session) return;
       getConsent(session.user.id, "price_sharing")
         .then(setSharing)
-        .catch(() => setSharing(false));
+        .catch((e) => {
+          console.warn(e);
+          setSharing(false);
+        });
     }, [session]),
   );
 
@@ -65,9 +70,15 @@ export default function ProfileScreen() {
   // The phone's real notification setting, re-checked when you come back from Settings.
   useFocusEffect(
     useCallback(() => {
-      Notifications.getPermissionsAsync().then(({ status }) =>
-        setAlertsOn(status === "granted"),
-      );
+      const check = () =>
+        Notifications.getPermissionsAsync().then(({ status }) =>
+          setAlertsOn(status === "granted"),
+        );
+      check();
+      const sub = AppState.addEventListener("change", (state) => {
+        if (state === "active") check();
+      });
+      return () => sub.remove();
     }, []),
   );
 
@@ -243,32 +254,29 @@ export default function ProfileScreen() {
                   ? "Checking…"
                   : alertsOn
                     ? "On. Change this in your phone's Settings."
-                    : "Off. Tap to turn on."
+                    : "Off. Turn on to hear when things run low."
               }
-              onPress={handleAlerts}
               trailing={
-                <View style={[styles.track, alertsOn && styles.trackOn]}>
-                  <View style={styles.knob} />
-                </View>
+                <Toggle
+                  value={!!alertsOn}
+                  disabled={alertsOn === null}
+                  onValueChange={handleAlerts}
+                  accessibilityLabel="Low-stock alerts"
+                />
               }
             />
-          </View>
-
-          <View style={[styles.row, styles.divider]}>
-            <Icon name="budget" size={22} />
-            <View style={styles.flex}>
-              <Text variant="item">Share my prices</Text>
-              <Text variant="caption" color={c.inkMuted}>
-                Anonymous averages, shown once 5 or more people share a price
-              </Text>
-            </View>
-            <Switch
-              value={!!sharing}
-              disabled={sharing === null}
-              onValueChange={toggleSharing}
-              trackColor={{ false: c.lineStrong, true: c.inverse }}
-              thumbColor={c.surfaceRaised}
-              accessibilityLabel="Share my prices"
+            <Row
+              icon="budget"
+              title="Share my prices"
+              detail="Helps show which shops are cheapest. Averages only, never your name or location."
+              trailing={
+                <Toggle
+                  value={!!sharing}
+                  disabled={sharing === null}
+                  onValueChange={toggleSharing}
+                  accessibilityLabel="Share my prices"
+                />
+              }
             />
           </View>
         </Section>

@@ -8,9 +8,9 @@ export const getConsent = async (userId: string, purpose: ConsentPurpose) => {
   const { data, error } = await supabase
     .from("consents")
     .select("granted")
-    .eq("id", userId)
+    .eq("user_id", userId)
     .eq("purpose", purpose)
-    .order("created", { ascending: false })
+    .order("created_at", { ascending: false })
     .limit(1);
 
   if (error) throw error;
@@ -23,7 +23,7 @@ export const setConsent = async (
   granted: boolean,
   source: "setup" | "profile",
 ) => {
-  const { error } = await supabase.from("consent").insert({
+  const { error } = await supabase.from("consents").insert({
     user_id: userId,
     purpose,
     granted,
