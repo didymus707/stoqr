@@ -12,38 +12,45 @@ const c = Colors.light;
 
 type PriceResult = {
   store: string;
-  avg_price: number;
-  min_price: number;
-  max_price: number;
-  data_points: number;
+  unit: string | null;
+  avg_unit_price: number;
+  contributors: number;
 };
 
-const money = (n: number) => `£${n.toFixed(2)}`;
+const money = (n: number) => `£${Number(n).toFixed(2)}`;
 
 export default function CompareScreen() {
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [term, setTerm] = useState(""); // what the shown results are for
+  const [term, setTerm] = useState("");
   const [results, setResults] = useState<PriceResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const query = search.trim();
+  const canSearch = query.length >= 2 && !loading;
+
   const handleSearch = async () => {
-    const query = search.trim();
-    if (!query || loading) return;
+    if (!canSearch) return;
     setLoading(true);
     setError(null);
     try {
       const { data, error: rpcError } = await supabase.rpc(
         "get_price_comparison",
-        { search_term: query },
+        {
+          search_term: query,
+        },
       );
       if (rpcError) throw rpcError;
-      const sorted = [...(data ?? [])].sort(
-        (a: PriceResult, b: PriceResult) => a.avg_price - b.avg_price,
-      );
-      setResults(sorted);
+      const rows = ((data ?? []) as PriceResult[])
+        .map((r) => ({
+          ...r,
+          avg_unit_price: Number(r.avg_unit_price),
+          contributors: Number(r.contributors),
+        }))
+        .sort((a, b) => a.avg_unit_price - b.avg_unit_price);
+      setResults(rows);
       setTerm(query);
       setSearched(true);
     } catch {
@@ -53,8 +60,8 @@ export default function CompareScreen() {
     }
   };
 
-  const maxPrice = results.reduce((m, r) => Math.max(m, r.avg_price), 0) || 1;
-  const totalReports = results.reduce((sum, r) => sum + r.data_points, 0);
+  const maxPrice =
+    results.reduce((m, r) => Math.max(m, r.avg_unit_price), 0) || 1;
 
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
@@ -64,7 +71,8 @@ export default function CompareScreen() {
             Compare prices
           </Text>
           <Text variant="bodySm" color={c.inkMuted}>
-            Prices shared by stoQr shoppers, per single item.
+            Average prices shared by stoQr shoppers across the UK, per single
+            item.
           </Text>
         </View>
         <View style={styles.searchRow}>
@@ -90,7 +98,7 @@ export default function CompareScreen() {
             label="Search"
             size="sm"
             variant="secondary"
-            disabled={!search.trim() || loading}
+            disabled={!canSearch}
             onPress={handleSearch}
           />
         </View>
@@ -113,49 +121,43 @@ export default function CompareScreen() {
           <View style={styles.notice}>
             <Text variant="heading">Find the cheapest shop</Text>
             <Text variant="bodySm" color={c.inkMuted}>
-              Search for something you buy and see what people near you paid at
-              each shop.
+              Search for something you buy to see what other stoQr shoppers paid
+              at each shop.
             </Text>
           </View>
         ) : results.length === 0 ? (
           <View style={styles.notice}>
-            <Text variant="heading">No prices for "{term}" yet</Text>
+            <Text variant="heading">Not enough prices for "{term}" yet</Text>
             <Text variant="bodySm" color={c.inkMuted}>
-              Add it to your cupboard with the price you paid, and you'll be the
-              first to share one.
+              We show a price once at least 5 shoppers have shared one for the
+              same shop. You can help by turning on price sharing in Profile.
             </Text>
             <Button
-              label={`Add ${term} to your cupboard`}
+              label="Open Profile"
               size="sm"
-              onPress={() =>
-                router.push(`/add-item?name=${encodeURIComponent(term)}`)
-              }
+              variant="outline"
+              onPress={() => router.push("/profile")}
               style={styles.start}
             />
           </View>
         ) : (
           <View style={styles.section}>
-            <View style={styles.sectionHead}>
-              <Text variant="overline" color={c.inkMuted}>
-                Results for "{term}"
-              </Text>
-              <Text variant="caption" color={c.inkMuted}>
-                {totalReports} {totalReports === 1 ? "price" : "prices"}
-              </Text>
-            </View>
+            <Text variant="overline" color={c.inkMuted}>
+              Results for "{term}"
+            </Text>
             <View style={styles.card}>
               {results.map((r, index) => {
-                const cheapest = index === 0;
+                const cheapest = index === 0 && results.length > 1;
                 return (
                   <View
-                    key={r.store}
+                    key={`${r.store}-${r.unit}`}
                     style={[styles.row, index > 0 && styles.divider]}
                   >
                     <View style={styles.rowTop}>
                       <View style={styles.flex}>
                         <View style={styles.storeLine}>
                           <Text variant="item">{r.store}</Text>
-                          {cheapest && results.length > 1 ? (
+                          {cheapest ? (
                             <View style={styles.pill}>
                               <Text variant="pill" color={c.onAccent}>
                                 Cheapest
@@ -164,24 +166,18 @@ export default function CompareScreen() {
                           ) : null}
                         </View>
                         <Text variant="caption" color={c.inkMuted}>
-                          {r.data_points}{" "}
-                          {r.data_points === 1
-                            ? "price shared"
-                            : "prices shared"}
-                          {r.min_price !== r.max_price
-                            ? ` · ${money(r.min_price)} – ${money(r.max_price)}`
-                            : ""}
+                          per {r.unit ?? "item"} · {r.contributors} shoppers
                         </Text>
                       </View>
-                      <Text variant="price">{money(r.avg_price)}</Text>
+                      <Text variant="price">{money(r.avg_unit_price)}</Text>
                     </View>
                     <View style={styles.track}>
                       <View
                         style={[
                           styles.fill,
                           {
-                            width: `${Math.round((r.avg_price / maxPrice) * 100)}%`,
-                            backgroundColor: cheapest ? c.accent : c.chart3,
+                            width: `${Math.round((r.avg_unit_price / maxPrice) * 100)}%`,
+                            backgroundColor: index === 0 ? c.accent : c.chart3,
                           },
                         ]}
                       />
@@ -191,8 +187,8 @@ export default function CompareScreen() {
               })}
             </View>
             <Text variant="caption" color={c.inkMuted}>
-              Averages of prices shoppers have recorded. What you pay may differ
-              by shop and area.
+              Averages of the latest price each shopper paid in the last 90
+              days. What you pay may differ.
             </Text>
           </View>
         )}
@@ -228,11 +224,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.card,
   },
   section: { gap: Spacing.s8 },
-  sectionHead: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "baseline",
-  },
   card: {
     backgroundColor: c.surfaceRaised,
     borderWidth: 1,
