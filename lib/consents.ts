@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 
-export const POLICY_VERSION = "2026-10-28";
+export const POLICY_VERSION = "2026-10-30";
 
 export type ConsentPurpose = "price_sharing" | "product_analytics";
 
