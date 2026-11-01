@@ -104,8 +104,9 @@ export default function SignUpScreen() {
             </Text>
           ) : null}
           <Text variant="caption" color={c.inkMuted} style={styles.center}>
-            By creating an account you agree to our {link("Terms", TERMS_URL)}{" "}
-            and {link("Privacy policy", PRIVACY_POLICY_URL)}.
+            You must be 18 or over. By creating an account you agree to our{" "}
+            {link("Terms", TERMS_URL)} and confir you've read our{" "}
+            {link("Privacy policy", PRIVACY_POLICY_URL)}.
           </Text>
           <Button
             label={loading ? "Creating account…" : "Create account"}
