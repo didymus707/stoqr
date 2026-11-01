@@ -9,7 +9,9 @@ export const POSTCODE_OR_DISTRICT_REGEX =
 // "SW16 1AA" -> "SW16", "sw161aa" -> "SW16", "SW16" -> "SW16"
 export const postcodeDistrict = (value: string) => {
   const postcode = value.replace(/\s+/g, "").toUpperCase();
-  return postcode.length >= 5 && /[0-9][A-Z]{2}$/.test(postcode) ? postcode.slice(0, -3) : postcode;
+  return postcode.length >= 5 && /[0-9][A-Z]{2}$/.test(postcode)
+    ? postcode.slice(0, -3)
+    : postcode;
 };
 
 export const updateProfile = async (
@@ -20,6 +22,8 @@ export const updateProfile = async (
     .from("profiles")
     .update(fields)
     .eq("id", userId);
+
+  if (error) throw error;
 };
 
 export const getOrCreateInventory = async (userId: string) => {
