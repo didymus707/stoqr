@@ -5,7 +5,7 @@ permalink: /privacy/
 
 # stoQr Privacy Policy
 
-**Last updated:** 30 October 2026 · **Version:** 2026-10-30
+**Last updated:** 30 October 2026 · **Version:** 2026-11-01
 
 ## Who we are
 
@@ -64,7 +64,7 @@ You can turn sharing off at any time in **Profile**. From that moment your price
 
 ## Who we share data with
 
-We don't sell your data and don't share it for advertising. We use these service providers, who process data only on our instructions:
+We don’t sell your data and don’t share it for advertising. If we ever want to use shared prices in reports for other businesses, we’ll ask you first, separately from price sharing, and it will be off unless you turn it on. We use these service providers, who process data only on our instructions:
 
 - **Supabase** (database, sign-in and hosting). Your data is stored in **London, UK** (Amazon Web Services, eu-west-2).
 - **stoqr.app.team@gmail.com** (sending account emails such as password resets)
