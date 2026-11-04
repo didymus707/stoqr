@@ -91,9 +91,9 @@ export const validateItemForm = (values: ItemFormValues): ItemFormErrors => {
   if (!values.name.trim()) errors.name = "Give it a name";
   const qty = toNumber(values.quantity);
   if (qty === null || qty < 0) errors.quantity = "Enter how many you have";
-  if (values.packPrice.trim() !== null) {
+  if (values.packPrice.trim() !== "") {
     const price = toNumber(values.packPrice);
-    if (price === null || price < 0) errors.packPrice = "Enter a price pls";
+    if (price === null || price < 0) errors.packPrice = "Enter a price, like 1.45";
   }
   return errors;
 };
