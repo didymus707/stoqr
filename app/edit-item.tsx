@@ -51,7 +51,10 @@ const EditItemScreen = () => {
     if (!values || saving) return;
     const found = validateItemForm(values);
     setErrors(found);
-    if (Object.keys(found).length > 0) return;
+    if (Object.keys(found).length > 0) {
+      setFormError("Check the fields marked above.");
+      return;
+    }
 
     setSaving(true);
     setFormError(null);
