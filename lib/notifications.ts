@@ -1,6 +1,6 @@
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
-import { Platform } from "react-native";
+import { Linking, Platform } from "react-native";
 import { unitLabel } from "./unit";
 
 Notifications.setNotificationHandler({
@@ -64,4 +64,14 @@ export const sendOutOfStockNotification = async (itemName: string) => {
     },
     trigger: null,
   });
+};
+
+export const turnOnAlerts = async () => {
+  const current = await Notifications.getPermissionsAsync();
+  if (current.granted) return true;
+  if (!current.canAskAgain) {
+    Linking.openSettings();
+    return false;
+  }
+  return (await requestNotificationPermissions()) === true;
 };

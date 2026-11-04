@@ -20,8 +20,16 @@ import { Text } from "@/components/ui/Text";
 import { Colors, Radius, Spacing } from "@/constants/theme";
 import { useProfile } from "@/hooks/useProfile";
 import { PRIVACY_POLICY_URL } from "@/lib/links";
-import { requestNotificationPermissions } from "@/lib/notifications";
-import { POSTCODE_OR_DISTRICT_REGEX, POSTCODE_REGEX, postcodeDistrict, updateProfile } from "@/lib/setup";
+import {
+  requestNotificationPermissions,
+  turnOnAlerts,
+} from "@/lib/notifications";
+import {
+  POSTCODE_OR_DISTRICT_REGEX,
+  POSTCODE_REGEX,
+  postcodeDistrict,
+  updateProfile,
+} from "@/lib/setup";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/stores/auth";
 import { getConsent, setConsent } from "@/lib/consents";
@@ -137,9 +145,7 @@ export default function ProfileScreen() {
       Linking.openSettings(); // only the phone's Settings can turn alerts off
       return;
     }
-    const granted = await requestNotificationPermissions();
-    if (granted) setAlertsOn(true);
-    else Linking.openSettings(); // already refused once: iOS only allows changing it in Settings
+    setAlertsOn(await turnOnAlerts()); // already refused once: iOS only allows changing it in Settings
   };
 
   const handleSignOut = async () => {
