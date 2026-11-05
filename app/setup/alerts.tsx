@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 import { Text } from "@/components/ui/Text";
 import { Colors, Radius, Spacing } from "@/constants/theme";
-import { requestNotificationPermissions } from "@/lib/notifications";
+import { turnOnAlerts } from "@/lib/notifications";
 import { finishSetup } from "@/lib/setup";
 import { useAuth } from "@/stores/auth";
 import { useRouter } from "expo-router";
@@ -24,7 +24,7 @@ export default function SetupAlerts() {
     setError(null);
 
     try {
-      if (askForAlerts) await requestNotificationPermissions();
+      if (askForAlerts) await turnOnAlerts();
       await finishSetup(session.user.id);
       router.replace("/(tabs)");
     } catch {

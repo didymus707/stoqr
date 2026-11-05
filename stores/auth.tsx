@@ -7,7 +7,6 @@ import {
 } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { requestNotificationPermissions } from "@/lib/notifications";
 
 type AuthContextType = {
   session: Session | null;
@@ -28,9 +27,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
-      if (session?.user) {
-        requestNotificationPermissions();
-      }
     });
 
     const {
@@ -38,7 +34,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (_event === "PASSWORD_RECOVERY") setRecoveringPassword(true);
-      if (_event === "SIGNED_IN") requestNotificationPermissions();
     });
 
     return () => subscription.unsubscribe();
