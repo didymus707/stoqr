@@ -53,6 +53,7 @@ export const Screen = ({
       >
         <ScrollView
           style={styles.flex}
+          keyboardDismissMode="on-drag"
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}

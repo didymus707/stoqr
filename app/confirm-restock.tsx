@@ -5,20 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 import { IconButton } from "@/components/ui/IconButton";
 import { useShoppingSession } from "@/stores/shopping-session";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Radius, Colors, FontSize, Spacing, Fonts } from "@/constants/theme";
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { Radius, Colors, Spacing, Fonts } from "@/constants/theme";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TextField } from "@/components/ui/TextField";
 import { Screen } from "@/components/ui/Screen";
 import { Field } from "@/components/ui/Field";
@@ -60,7 +49,6 @@ const lastPackPrice = (item: RestockItem) => {
 
 const ConfirmRestock = () => {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ ids?: string }>();
   const { activeStore, setActiveStore, setCheckedLowStock } =
     useShoppingSession();
@@ -161,11 +149,11 @@ const ConfirmRestock = () => {
       : !store.trim()
         ? "Enter the shop you bought these from"
         : missingPrices > 0
-          ? `And a price for ${missingPrices} more items${missingPrices === 1 ? "" : "s"}`
+          ? `And a price for ${missingPrices} more item${missingPrices === 1 ? "" : "s"}`
           : null;
 
   const handleConfirm = async () => {
-    if (!!canSubmit) return;
+    if (!canSubmit) return;
     setIsSubmitting(true);
     setFormError(null);
 
@@ -191,7 +179,8 @@ const ConfirmRestock = () => {
       // return to shopping list
       setCheckedLowStock(new Set());
       router.back(); // shopping list refetches on focus
-    } catch {
+    } catch (e) {
+      console.warn(e);
       setFormError(
         "Couldn't save this restock. Check your connection and try again.",
       );
@@ -273,7 +262,7 @@ const ConfirmRestock = () => {
         <View style={styles.section}>
           <View style={styles.sectionHead}>
             <Text variant="overline" color={c.inkMuted}>
-              {items.length} {items.length > 1 ? "item" : "items"}
+              {items.length} {items.length === 1 ? "item" : "items"}
             </Text>
             <Text variant="caption" color={c.inkMuted}>
               Packs · price per pack
@@ -324,6 +313,7 @@ const ConfirmRestock = () => {
 
                   <View style={styles.controls}>
                     <Stepper
+                      typeable
                       label={
                         isPack
                           ? `Packs of ${item.name}`
