@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { Text } from "@/components/ui/Text";
 import { TextField } from "@/components/ui/TextField";
+import { Toggle } from "@/components/ui/Toggle";
 import { Colors, Radius, Spacing } from "@/constants/theme";
 import { setConsent } from "@/lib/consents";
 import { updateProfile } from "@/lib/setup";
@@ -43,15 +44,21 @@ export default function SetupStores() {
         : [...prev, store],
     );
 
-  const addOtherStores = () => {
-    const storeName = otherStores.trim();
-    if (!storeName) return;
-    if (!stores.includes(storeName)) setStores((prev) => [...prev, storeName]);
-    if (!pickedStores.includes(storeName))
-      setPickedStores((prev) => [...prev, storeName]);
-    setOtherStores("");
-    setAddingOtherStores(false);
-  };
+   const addOtherStores = () => {
+     const typed = otherStores.trim();
+     if (!typed) {
+       setAddingOtherStores(false);
+       return;
+     }
+
+     const storeName =
+       stores.find((s) => s.toLowerCase() === typed.toLowerCase()) ?? typed;
+     if (!stores.includes(storeName)) setStores((prev) => [...prev, storeName]);
+     if (!pickedStores.includes(storeName))
+       setPickedStores((prev) => [...prev, storeName]);
+     setOtherStores("");
+     setAddingOtherStores(false);
+   };
 
   const handleContinue = async () => {
     if (pickedStores.length === 0 || !session || saving) return;
@@ -63,7 +70,7 @@ export default function SetupStores() {
       goNext();
     } catch {
       setError(
-        "Couldn't save your stores. Check your connection and try again.",
+        "Couldn't save your shops. Check your connection and try again.",
       );
     } finally {
       setSaving(false);
@@ -75,7 +82,7 @@ export default function SetupStores() {
   return (
     <SetupLayout
       step={2}
-      title="Which stores do you use?"
+      title="Which shops do you use?"
       subtitle="We'll compare prices across these, and list them first when you start a shop"
       onSkip={goNext}
       footer={
@@ -88,10 +95,10 @@ export default function SetupStores() {
           <Button
             label={
               saving
-                ? "Saving..."
+                ? "Saving…"
                 : count === 0
-                  ? "Pick at least one store"
-                  : `Continue with ${count} ${count === 1 ? "store" : "stores"}`
+                  ? "Pick at least one shop"
+                  : `Continue with ${count} ${count === 1 ? "shop" : "shops"}`
             }
             disabled={count === 0 || saving}
             onPress={handleContinue}
@@ -127,17 +134,6 @@ export default function SetupStores() {
           );
         })}
 
-        {!addingOtherStores ? (
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.tile, styles.tileOther]}
-            onPress={() => setAddingOtherStores(true)}
-          >
-            <Icon name="add" size={18} strokeWidth={2} />
-            <Text variant="item">Other Store</Text>
-          </Pressable>
-        ) : null}
-
         {addingOtherStores ? (
           <View style={styles.otherRow}>
             <TextField
@@ -145,12 +141,12 @@ export default function SetupStores() {
               containerStyle={styles.flex}
               value={otherStores}
               onChangeText={setOtherStores}
-              placeholder="Store Name"
+              placeholder="e.g. Iceland, M&S"
               autoFocus
               autoCapitalize="words"
               returnKeyType="done"
               onSubmitEditing={addOtherStores}
-              accessibilityLabel="Other store name"
+              accessibilityLabel="Other shop name"
             />
             <Button
               label="Add"
@@ -159,39 +155,44 @@ export default function SetupStores() {
               onPress={addOtherStores}
             />
           </View>
-        ) : null}
+        ) : (
+          <Pressable
+            accessibilityRole="button"
+            style={[styles.tile, styles.tileOther]}
+            onPress={() => setAddingOtherStores(true)}
+          >
+            <Icon name="add" size={18} strokeWidth={2} />
+            <Text variant="item">Other shop</Text>
+          </Pressable>
+        )}
+      </View>
 
-        <View style={styles.consent}>
-          <View style={styles.consentText}>
-            <Text variant="item">Find out where things are cheapest</Text>
-            <Text variant="bodySm" color={c.inkMuted}>
-              Share the prices you pay and stoQr can show which shops are
-              cheapest for the things you buy, using prices from shoppers like
-              you.
-            </Text>
-            <Text variant="bodySm" color={c.inkMuted}>
-              Prices only appear as averages, once 5 or more people have shared
-              one. Your name is never shown
+      <View style={styles.consent}>
+        <View style={styles.consentText}>
+          <Text variant="item">Find out where things are cheapest</Text>
+          <Text variant="bodySm" color={c.inkMuted}>
+            Share the prices you pay and stoQr can show which shops are cheapest
+            for the things you buy, using prices from shoppers like you.
+          </Text>
+          <Text variant="bodySm" color={c.inkMuted}>
+            Prices only appear as averages, once 5 or more people have shared
+            one. Your name is never shown.
+          </Text>
+        </View>
+
+        <View style={styles.consentToggle}>
+          <View style={styles.flex}>
+            <Text variant="label">Share my prices</Text>
+            <Text variant="caption" color={c.inkMuted}>
+              Off unless you turn it on. You can change this in Profile.
             </Text>
           </View>
-
-          <View style={styles.consentToggle}>
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <Text variant="label">Share my prices</Text>
-              <Text variant="caption" color={c.inkMuted}>
-                Off unless you turn it on. You can change this in Profile.
-              </Text>
-            </View>
-
-            <Switch
-              value={sharePrice}
-              onValueChange={setSharePrice}
-              trackColor={{ false: c.lineStrong, true: c.inverse }}
-              thumbColor={c.surfaceRaised}
-              accessibilityLabel="Share my prices"
-              accessibilityHint="Adds the prices you pay to anonymous averages other shoppers see"
-            />
-          </View>
+          <Toggle
+            value={sharePrice}
+            onValueChange={setSharePrice}
+            accessibilityLabel="Share my prices"
+            accessibilityHint="Adds the prices you pay to anonymous averages other shoppers see"
+          />
         </View>
       </View>
     </SetupLayout>
@@ -199,9 +200,14 @@ export default function SetupStores() {
 }
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    rowGap: 10,
+  },
   tile: {
-    width: "48.5%",
+    width: "48%",
     height: 56,
     flexDirection: "row",
     alignItems: "center",
@@ -230,7 +236,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   markSelected: { backgroundColor: c.onInverse, borderColor: c.onInverse },
-  otherRow: { flexDirection: "row", alignItems: "center", gap: Spacing.s8 },
+  otherRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.s8,
+  },
   flex: { flex: 1 },
   center: { textAlign: "center" },
   consent: {
