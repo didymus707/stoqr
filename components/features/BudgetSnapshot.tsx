@@ -14,13 +14,7 @@ export default function BudgetSnapshot() {
   const { budget, loading, error } = useBudget();
   const [showTop, setShowTop] = useState(false);
 
-  if (
-    loading ||
-    error ||
-    !budget ||
-    !budget.total_value ||
-    budget.item_count === 0
-  ) {
+  if (!budget || error || !budget.total_value || budget.item_count === 0) {
     return null;
   }
 
