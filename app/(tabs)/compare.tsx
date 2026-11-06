@@ -71,7 +71,7 @@ export default function CompareScreen() {
             Compare prices
           </Text>
           <Text variant="bodySm" color={c.inkMuted}>
-            Average prices shared by stoQr shoppers across the UK, per single
+            Typical prices shared by stoQr shoppers across the UK, per single
             item.
           </Text>
         </View>
@@ -133,7 +133,7 @@ export default function CompareScreen() {
               same shop. You can help by turning on price sharing in Profile.
             </Text>
             <Button
-              label="Open Profile"
+              label="Open profile"
               size="sm"
               variant="outline"
               onPress={() => router.push("/profile")}
@@ -187,7 +187,7 @@ export default function CompareScreen() {
               })}
             </View>
             <Text variant="caption" color={c.inkMuted}>
-              Averages of the latest price each shopper paid in the last 90
+              The middle of the latest prices each shopper paid in the last 90
               days. What you pay may differ.
             </Text>
           </View>

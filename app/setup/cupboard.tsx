@@ -19,7 +19,7 @@ const starterItems = [
   { key: "rice", name: "Rice, 5kg", unit: "bag", alertAt: 0 },
   { key: "tomatoes", name: "Tinned tomatoes", unit: "can", alertAt: 1 },
   { key: "oil", name: "Cooking oil", unit: "bottle", alertAt: 0 },
-  { key: "loo", name: "Toilet roll", unit: "pc", alertAt: 4 },
+  { key: "loo", name: "Toilet roll", unit: "roll", alertAt: 4 },
   { key: "soap", name: "Washing-up liquid", unit: "bottle", alertAt: 0 },
   { key: "plantain", name: "Plantain", unit: "pc", alertAt: 1 },
 ];
@@ -69,7 +69,7 @@ export default function SetupCupboard() {
     <SetupLayout
       step={3}
       title="What's in your cupboard?"
-      subtitle="Tap + for anything you have now. You can add the rest later"
+      subtitle="Tap + for anything you have now. You can add the rest later."
       onSkip={goNext}
       footer={
         <>
@@ -101,7 +101,7 @@ export default function SetupCupboard() {
               <Text variant="caption" color={c.inkMuted}>
                 {item.alertAt > 0
                   ? `We'll warn you at ${item.alertAt}`
-                  : "We'll warn you when its out"}
+                  : "We'll warn you when it's out"}
               </Text>
             </View>
             <Stepper

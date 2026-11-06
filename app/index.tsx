@@ -43,8 +43,8 @@ export default function WelcomeScreen() {
         </Text>
         <Text variant="body" color={c.inkMuted}>
           stoQr knows what's in your cupboards, warns you before you run low,
-          and shows which shop near you is cheapest, priced by people in your
-          area.
+          and shows and shows which shops are cheapest, priced by shoppers
+          across the UK.
         </Text>
       </View>
 

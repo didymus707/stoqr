@@ -4,11 +4,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Text } from "@/components/ui/Text";
 import { TextField } from "@/components/ui/TextField";
 import { Colors, Radius, Spacing } from "@/constants/theme";
-import {
-  POSTCODE_REGEX,
-  postcodeDistrict,
-  updateProfile,
-} from "@/lib/setup";
+import { POSTCODE_REGEX, postcodeDistrict, updateProfile } from "@/lib/setup";
 import { useAuth } from "@/stores/auth";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -50,12 +46,12 @@ export default function SetupPostcode() {
   return (
     <SetupLayout
       step={1}
-      title="Where do you shop"
-      subtitle="Your postcode lets us show prices from shoppers near you"
+      title="Where do you shop?"
+      subtitle="We use the first half to make sure prices come from UK shoppers."
       onSkip={goNext}
       footer={
         <Button
-          label={saving ? "Saving" : "Continue"}
+          label={saving ? "Saving..." : "Continue"}
           disabled={!valid || saving}
           onPress={handleContinue}
         />
@@ -68,7 +64,7 @@ export default function SetupPostcode() {
           mono
           value={postcode}
           onChangeText={setPostcode}
-          placeholder="e.g. SR0 0YZ"
+          placeholder="e.g. SW16 1AA"
           autoCapitalize="characters"
           autoCorrect={false}
           autoComplete="postal-code"
@@ -80,7 +76,7 @@ export default function SetupPostcode() {
         />
         {showInvalid ? (
           <Text variant="caption" color={c.accentText}>
-            Enter a UK postcode, like SR0 1XY{" "}
+            Enter a UK postcode, like SW16 1AA
           </Text>
         ) : null}
         {error ? (
@@ -93,9 +89,9 @@ export default function SetupPostcode() {
       <View style={styles.note}>
         <Icon name="lock" size={20} color={c.inkMuted} />
         <Text variant="bodySm" color={c.inkMuted} style={styles.noteText}>
-          We only keep the first half
-          {valid ? `, ${postcodeDistrict(trimmed)},` : ""} to show prices near
-          you. We never store your full address.
+          Only the first half
+          {valid ? `, ${postcodeDistrict(trimmed)},` : ""} is kept. Other
+          shoppers never see your address.
         </Text>
       </View>
     </SetupLayout>
@@ -111,7 +107,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: c.line,
     borderRadius: Radius.card,
-    padding: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
   },
   noteText: { flex: 1 },
 });
