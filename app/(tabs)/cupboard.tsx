@@ -13,6 +13,7 @@ import { useInventory } from "@/hooks/useInventory";
 import { supabase } from "@/lib/supabase";
 import { unitLabel } from "@/lib/unit";
 import { Item } from "@/types/database";
+import { Button } from "@/components/ui/Button";
 
 const c = Colors.light;
 
@@ -165,10 +166,19 @@ export default function CupboardScreen() {
             Loading your cupboard…
           </Text>
         ) : error ? (
-          <Text variant="bodySm" color={c.accentText} style={styles.center}>
-            Couldn't load your cupboard. Pull down or reopen the tab to try
-            again.
-          </Text>
+          <View style={styles.notice}>
+            <Text variant="item">Couldn't load your cupboard</Text>
+            <Text variant="bodySm" color={c.inkMuted}>
+              Check your connection and try again.
+            </Text>
+            <Button
+              label="Try again"
+              size="sm"
+              variant="outline"
+              onPress={refetch}
+              style={styles.start}
+            />
+          </View>
         ) : visible.length === 0 ? (
           <View style={styles.empty}>
             <Text variant="heading">{emptyText.title}</Text>
@@ -299,4 +309,13 @@ const styles = StyleSheet.create({
     gap: Spacing.s8,
     paddingVertical: Spacing.s48,
   },
+  notice: {
+    gap: Spacing.s8,
+    padding: Spacing.s20,
+    backgroundColor: c.surfaceRaised,
+    borderWidth: 1,
+    borderColor: c.line,
+    borderRadius: Radius.card,
+  },
+  start: { alignSelf: "flex-start" },
 });

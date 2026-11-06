@@ -83,7 +83,7 @@ export default function SetupStores() {
     <SetupLayout
       step={2}
       title="Which shops do you use?"
-      subtitle="We'll compare prices across these, and list them first when you start a shop"
+      subtitle="We'll list these first when you start a shop."
       onSkip={goNext}
       footer={
         <>

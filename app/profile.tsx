@@ -5,7 +5,6 @@ import {
   Modal,
   Pressable,
   StyleSheet,
-  Switch,
   View,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -20,13 +19,9 @@ import { Text } from "@/components/ui/Text";
 import { Colors, Radius, Spacing } from "@/constants/theme";
 import { useProfile } from "@/hooks/useProfile";
 import { PRIVACY_POLICY_URL } from "@/lib/links";
-import {
-  requestNotificationPermissions,
-  turnOnAlerts,
-} from "@/lib/notifications";
+import { turnOnAlerts } from "@/lib/notifications";
 import {
   POSTCODE_OR_DISTRICT_REGEX,
-  POSTCODE_REGEX,
   postcodeDistrict,
   updateProfile,
 } from "@/lib/setup";
@@ -475,21 +470,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.s16,
   },
   divider: { borderTopWidth: 1, borderTopColor: c.lineSoft },
-  track: {
-    width: 48,
-    height: 28,
-    borderRadius: 14,
-    padding: 3,
-    backgroundColor: c.lineStrong,
-    alignItems: "flex-start",
-  },
-  trackOn: { backgroundColor: c.inverse, alignItems: "flex-end" },
-  knob: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: c.surfaceRaised,
-  },
   dangerZone: { alignItems: "center", gap: 4 },
   backdrop: {
     flex: 1,

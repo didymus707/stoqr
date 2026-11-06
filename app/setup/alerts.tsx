@@ -37,7 +37,7 @@ export default function SetupAlerts() {
     <SetupLayout
       step={4}
       title="Want a heads-up before you run out?"
-      subtitle="We'll send one alert when something gets low and add it to your shopping list for you"
+      subtitle="We'll send one alert when something gets low and add it to your shopping list for you."
       footer={
         <>
           {error ? (

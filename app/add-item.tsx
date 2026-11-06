@@ -68,7 +68,7 @@ const AddItemScreen = () => {
       router.back();
     } catch {
       setFormError(
-        "Couldn't add this item. Check your connection and try again",
+        "Couldn't add this item. Check your connection and try again.",
       );
     } finally {
       setSaving(false);

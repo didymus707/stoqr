@@ -154,7 +154,7 @@ export default function HomeScreen() {
                   </Text>
                   <Text variant="bodySm" color={c.onInverseMuted}>
                     {lowCount === 0
-                      ? `All ${stats.total} items are stocked`
+                      ? `All ${stats.total} item are stocked`
                       : stats.out > 0
                         ? `${stats.out} ${stats.out === 1 ? "is" : "are"} out · all on your list`
                         : "All on your shopping list"}

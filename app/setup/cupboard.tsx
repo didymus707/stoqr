@@ -19,7 +19,7 @@ const starterItems = [
   { key: "rice", name: "Rice, 5kg", unit: "bag", alertAt: 0 },
   { key: "tomatoes", name: "Tinned tomatoes", unit: "can", alertAt: 1 },
   { key: "oil", name: "Cooking oil", unit: "bottle", alertAt: 0 },
-  { key: "loo", name: "Toilet roll", unit: "pc", alertAt: 4 },
+  { key: "loo", name: "Toilet roll", unit: "roll", alertAt: 4 },
   { key: "soap", name: "Washing-up liquid", unit: "bottle", alertAt: 0 },
   { key: "plantain", name: "Plantain", unit: "pc", alertAt: 1 },
 ];
@@ -30,11 +30,14 @@ export default function SetupCupboard() {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [added, setAdded] = useState(false);
 
   const chosen = starterItems.filter((item) => (quantities[item.key] ?? 0) > 0);
   const goNext = () => router.push("/setup/alerts");
 
   const handleAdd = async () => {
+    if (added) return goNext();
+
     if (!session || saving || chosen.length === 0) return;
     setSaving(true);
     setError(null);
@@ -51,6 +54,7 @@ export default function SetupCupboard() {
         })),
       );
       if (insertError) throw insertError;
+      setAdded(true);
       goNext();
     } catch {
       setError("Couldn't add your items. Check your connection and try again.");
@@ -65,7 +69,7 @@ export default function SetupCupboard() {
     <SetupLayout
       step={3}
       title="What's in your cupboard?"
-      subtitle="Tap + for anything you have now. You can add the rest later"
+      subtitle="Tap + for anything you have now. You can add the rest later."
       onSkip={goNext}
       footer={
         <>
@@ -75,7 +79,11 @@ export default function SetupCupboard() {
             </Text>
           ) : null}
           <Button
-            label={`Add ${count} ${count === 1 ? "item" : "items"} to cupboard`}
+            label={
+              added
+                ? "Continue"
+                : `Add ${count} ${count === 1 ? "item" : "items"} to cupboard`
+            }
             disabled={saving || count === 0}
             onPress={handleAdd}
           />
@@ -93,7 +101,7 @@ export default function SetupCupboard() {
               <Text variant="caption" color={c.inkMuted}>
                 {item.alertAt > 0
                   ? `We'll warn you at ${item.alertAt}`
-                  : "We'll warn you when its out"}
+                  : "We'll warn you when it's out"}
               </Text>
             </View>
             <Stepper

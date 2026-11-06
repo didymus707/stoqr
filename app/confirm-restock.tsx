@@ -149,7 +149,7 @@ const ConfirmRestock = () => {
       : !store.trim()
         ? "Enter the shop you bought these from"
         : missingPrices > 0
-          ? `And a price for ${missingPrices} more item${missingPrices === 1 ? "" : "s"}`
+          ? `Enter a price for ${missingPrices} more item${missingPrices === 1 ? "" : "s"}`
           : null;
 
   const handleConfirm = async () => {

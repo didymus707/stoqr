@@ -2,7 +2,6 @@ import { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -25,6 +24,8 @@ import { TextField } from "@/components/ui/TextField";
 import { Colors, Radius, Spacing } from "@/constants/theme";
 import { useShoppingList } from "@/hooks/useShoppingList";
 import { useShoppingSession } from "@/stores/shopping-session";
+import { useProfile } from "@/hooks/useProfile";
+import { unitLabel } from "@/lib/unit";
 
 const c = Colors.light;
 const COMMON_STORES = [
@@ -50,6 +51,7 @@ export default function ShoppingListScreen() {
   } = useShoppingList();
   const { activeStore, setActiveStore, checkedLowStock, setCheckedLowStock } =
     useShoppingSession();
+  const { profile } = useProfile();
 
   const scrollRef = useRef<ScrollView>(null);
   const [newItemName, setNewItemName] = useState("");
@@ -111,13 +113,16 @@ export default function ShoppingListScreen() {
   };
 
   const handleChooseStore = () => {
+    const shopChoices = [
+      ...new Set([...(profile?.preferred_stores ?? []), ...COMMON_STORES]),
+    ];
     const options = [
-      ...COMMON_STORES,
+      ...shopChoices,
       "Other",
       ...(activeStore ? ["Not shopping"] : []),
       "Cancel",
     ];
-    const otherIndex = COMMON_STORES.length;
+    const otherIndex = shopChoices.length;
     const notShoppingIndex = activeStore ? otherIndex + 1 : -1;
     const cancelIndex = options.length - 1;
 
@@ -132,7 +137,7 @@ export default function ShoppingListScreen() {
         if (index === undefined || index === cancelIndex) return;
         if (index === otherIndex) return setShowCustomStore(true);
         if (index === notShoppingIndex) return setActiveStore(null);
-        setActiveStore(COMMON_STORES[index]);
+        setActiveStore(shopChoices[index]);
       },
     );
   };
@@ -231,14 +236,14 @@ export default function ShoppingListScreen() {
         ) : null}
       </View>
 
-      {loading ? (
+      {loading && totalItems === 0 ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={c.accent} />
         </View>
       ) : error ? (
         <View style={styles.centered}>
           <Text variant="bodySm" color={c.accentText} style={styles.centerText}>
-            {error}
+            Couldn't load your list. Check your connection and try again.
           </Text>
         </View>
       ) : (
@@ -287,9 +292,11 @@ export default function ShoppingListScreen() {
                     first={index === 0}
                     name={item.name}
                     detail={
-                      item.status === "out" ? "Out" : `${item.quantity} left`
+                      item.status === "out"
+                        ? "Out"
+                        : `${item.quantity} ${unitLabel(item.quantity, item.unit)} left`
                     }
-                    price={item.price}
+                    price={item.pack_size > 1 ? item.pack_price : item.price}
                     checked={checkedLowStock.has(item.id)}
                     onToggle={() => toggleLowStock(item.id)}
                     onRemove={() => dismissLowStock(item.id)}
