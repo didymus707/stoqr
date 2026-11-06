@@ -113,7 +113,6 @@ export const formToItemFields = (values: ItemFormValues) => {
     pack_size: size,
     pack_price: packPrice,
     price: unitPrice,
-    totalValue: unitPrice !== null ? unitPrice * quantity : null,
     price_mode: "per_unit",
   };
 };

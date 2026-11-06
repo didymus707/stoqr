@@ -67,7 +67,8 @@ const EditItemScreen = () => {
 
       if (error) throw error;
       router.back();
-    } catch {
+    } catch(e) {
+      console.warn(e)
       setFormError(
         "Couldn't save your changes. Check your connection and try again",
       );
