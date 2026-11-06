@@ -111,6 +111,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: c.line,
     borderRadius: Radius.card,
+    padding: 8,
   },
   noteText: { flex: 1 },
 });
