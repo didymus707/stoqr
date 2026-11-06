@@ -30,11 +30,14 @@ export default function SetupCupboard() {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [added, setAdded] = useState(false);
 
   const chosen = starterItems.filter((item) => (quantities[item.key] ?? 0) > 0);
   const goNext = () => router.push("/setup/alerts");
 
   const handleAdd = async () => {
+    if (added) return goNext();
+
     if (!session || saving || chosen.length === 0) return;
     setSaving(true);
     setError(null);
@@ -51,6 +54,7 @@ export default function SetupCupboard() {
         })),
       );
       if (insertError) throw insertError;
+      setAdded(true);
       goNext();
     } catch {
       setError("Couldn't add your items. Check your connection and try again.");
@@ -75,7 +79,11 @@ export default function SetupCupboard() {
             </Text>
           ) : null}
           <Button
-            label={`Add ${count} ${count === 1 ? "item" : "items"} to cupboard`}
+            label={
+              added
+                ? "Continue"
+                : `Add ${count} ${count === 1 ? "item" : "items"} to cupboard`
+            }
             disabled={saving || count === 0}
             onPress={handleAdd}
           />
