@@ -17,18 +17,6 @@ export const requestNotificationPermissions = async () => {
     return false;
   }
 
-  // check exisiting permisiions
-  const { status: exisitingStatus } = await Notifications.getPermissionsAsync();
-  let finalStatus = exisitingStatus;
-
-  // request if not granted
-  if (exisitingStatus !== "granted") {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
-  }
-
-  if (Platform.OS === "web") return;
-
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
       name: "StoQr Alerts",
@@ -37,7 +25,16 @@ export const requestNotificationPermissions = async () => {
     });
   }
 
-  return finalStatus === "granted";
+  // check exisiting permisiions
+  const { status: exisitingStatus } = await Notifications.getPermissionsAsync();
+
+  // request if not granted
+  if (exisitingStatus === "granted") return true;
+  const { status } = await Notifications.requestPermissionsAsync();
+
+  if (Platform.OS === "web") return;
+
+  return status === "granted";
 };
 
 export const sendLowStockNotification = async (
