@@ -5,7 +5,7 @@ permalink: /terms/
 
 # stoQr Terms of Use
 
-**Last updated:** 30 October 2026
+**Last updated:** 01 November 2026
 
 ## 1. About these terms
 

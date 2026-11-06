@@ -5,7 +5,7 @@ permalink: /privacy/
 
 # stoQr Privacy Policy
 
-**Last updated:** 30 October 2026 · **Version:** 2026-11-01
+**Last updated:** 01 November 2026 · **Version:** 2026-11-01
 
 ## Who we are
 
