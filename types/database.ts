@@ -4,7 +4,7 @@ export type Profile = {
   created_at: string;
   postcode: string | null;
   preferred_stores: string[];
-  onboarded_At: string | null;
+  onboarded_at: string | null;
 };
 
 export type Inventory = {
