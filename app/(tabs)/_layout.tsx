@@ -11,19 +11,20 @@ const c = Colors.light;
 export default function TabLayout() {
   const { session, loading } = useAuth();
   const [onboarded, setOnboarded] = useState<boolean | null>(null);
+  const userId = session?.user.id;
 
   useEffect(() => {
     setOnboarded(null);
-    if (!session) return;
+    if (!userId) return;
     supabase
       .from("profiles")
       .select("onboarded_at")
-      .eq("id", session.user.id)
+      .eq("id", userId)
       .single()
       .then(({ data, error }) =>
         setOnboarded(error ? true : !!data?.onboarded_at),
       );
-  }, [session]);
+  }, [userId]);
 
   if (loading) return <LoadingScreen />;
   if (!session) return <Redirect href="/sign-in" />;
