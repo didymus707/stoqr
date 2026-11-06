@@ -93,7 +93,8 @@ export const validateItemForm = (values: ItemFormValues): ItemFormErrors => {
   if (qty === null || qty < 0) errors.quantity = "Enter how many you have";
   if (values.packPrice.trim() !== "") {
     const price = toNumber(values.packPrice);
-    if (price === null || price < 0) errors.packPrice = "Enter a price, like 1.45";
+    if (price === null || price < 0)
+      errors.packPrice = "Enter a price, like 1.45";
   }
   return errors;
 };
@@ -138,6 +139,7 @@ export const ItemForm = ({
   const amount = (key: "quantity" | "warnAt", label: string) =>
     countable ? (
       <Stepper
+      typeable
         label={label}
         value={toNumber(v[key]) ?? 0}
         onChange={(n) => onChange({ [key]: String(n) })}
@@ -148,7 +150,7 @@ export const ItemForm = ({
         mono
         value={v[key]}
         keyboardType="decimal-pad"
-        onChange={(text) => onChange({ [key]: text })}
+        onChangeText={(text) => onChange({ [key]: text })}
         containerStyle={styles.amountField}
         accessibilityLabel={label}
       />
@@ -217,6 +219,7 @@ export const ItemForm = ({
         {isPack ? (
           <Row label={`${capitalise(many)} in a pack`}>
             <Stepper
+              typeable
               label={`${many} in a pack`}
               value={v.packSize}
               min={2}
@@ -262,7 +265,7 @@ export const ItemForm = ({
           hint={errors.quantity}
           hintIsError={!!errors.quantity}
         >
-          {amount("quantity", `Hjow many ${many}`)}
+          {amount("quantity", `How many ${many}`)}
         </Row>
 
         <Row

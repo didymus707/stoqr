@@ -97,6 +97,7 @@ export default function SetupCupboard() {
               </Text>
             </View>
             <Stepper
+              typeable
               label={item.name}
               value={quantities[item.key] ?? 0}
               onChange={(value) =>
