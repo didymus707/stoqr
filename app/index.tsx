@@ -53,7 +53,7 @@ export default function WelcomeScreen() {
         <Button
           label="I already have an account"
           variant="ghost"
-          onPress={() => router.push("/sign-up")}
+          onPress={() => router.push("/sign-in")}
         />
       </View>
     </SafeAreaView>
